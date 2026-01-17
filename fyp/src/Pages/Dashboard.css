@@ -1,0 +1,22 @@
+.dashboard-container {
+  padding: 80px 60px;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.dashboard-container h1 {
+  font-size: 32px;
+  margin-bottom: 5px;
+  color: #0f006d;
+  margin-top: 20px;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 40px;
+}
+
+.router-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 25px;
+}

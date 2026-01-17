@@ -1,0 +1,78 @@
+.how-section-alt {
+  padding: 100px 20px;
+  background-color: #f8f9fb;
+}
+
+.how-header {
+  text-align: center;
+  margin-bottom: 70px;
+}
+
+.how-subtitle {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #6c757d;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.how-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #0f006d;
+}
+
+.timeline {
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 24px;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background-color: #dee2e6;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 50px;
+  position: relative;
+}
+
+.timeline-step {
+  min-width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #0f006d;
+  color: #fff;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.timeline-content {
+  margin-left: 30px;
+}
+
+.timeline-content h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #0f006d;
+}
+
+.timeline-content p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #555;
+}
