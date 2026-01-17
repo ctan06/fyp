@@ -1,0 +1,15 @@
+---
+
+- name: Displaying Router Configurations
+  hosts: cisco_routers
+  gather_facts: false
+
+  tasks:
+    - name: Get running configuration
+      ios_command:
+        commands: show running-config
+      register: output
+
+    - name: display output
+      debug:
+        var: output.stdout_lines
