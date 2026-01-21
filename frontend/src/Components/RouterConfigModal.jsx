@@ -11,12 +11,7 @@ const RouterConfigModal = ({ router, onClose }) => {
     setError(null);
 
     try {
-      const response = await fetch("http://localhost:5000/run-config", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch("http://localhost:8000/run-playbook");
 
       const data = await response.json();
 
@@ -24,7 +19,7 @@ const RouterConfigModal = ({ router, onClose }) => {
         throw new Error(data.error || "Failed to fetch configuration");
       }
 
-      setConfig(data.output);
+      setConfig(data.stdout.join("\n"));
     } catch (err) {
       setError(err.message);
     }

@@ -1,8 +1,17 @@
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 import subprocess
 import os
 
 app = FastAPI(title="Simple Ansible API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Paths to playbook and inventory inside project
 ANSIBLE_DIR = "../ansible"
