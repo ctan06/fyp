@@ -10,7 +10,7 @@
   justify-content: center;
 }
 
-.modal-content {
+.modal {
   background: #fff;
   padding: 35px;
   border-radius: 12px;
@@ -18,16 +18,16 @@
   max-width: 90%;
 }
 
-.modal-content h2 {
+.modal h2 {
   margin-bottom: 20px;
 }
 
-.modal-content ul {
+.modal ul {
   list-style: none;
   padding: 0;
 }
 
-.modal-content li {
+.modal li {
   margin-bottom: 10px;
   font-size: 14px;
 }
@@ -40,4 +40,36 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
+}
+
+.fetch-config-btn {
+  margin: 16px 0;
+  padding: 10px 16px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.fetch-config-btn:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+.config-output {
+  margin-top: 16px;
+  background: #0f172a;
+  color: #e5e7eb;
+  padding: 12px;
+  border-radius: 6px;
+  max-height: 300px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 13px;
+}
+
+.error {
+  color: #dc2626;
 }
