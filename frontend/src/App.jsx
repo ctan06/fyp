@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useState } from "react";
 
 import Navbar from "./Components/Navbar";
 import Hero from "./Components/Hero";
@@ -14,6 +15,30 @@ import ForgotPassword from "./Pages/ForgotPassword";
 import Dashboard from "./Pages/Dashboard";
 
 const App = () => {
+
+  // This state represents whether the user is authenticated or not.
+  // It is initialized using localStorage so that the login state
+  // persists even after a page refresh.
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    localStorage.getItem("isAuthenticated") === "true"
+  );
+
+  // This function is called after a successful login.
+  // It updates localStorage to persist authentication
+  // and updates React state to trigger a re-render.
+  const login = () => {
+    localStorage.setItem("isAuthenticated", "true");
+    setIsAuthenticated(true);
+  };
+
+  // This function logs the user out by removing the authentication
+  // flag from localStorage and updating the state.
+  // Once called, the UI automatically updates to the non-authenticated view.
+  const logout = () => {
+    localStorage.removeItem("isAuthenticated");
+    setIsAuthenticated(false);
+  };
+
   return (
     <Router>
 
