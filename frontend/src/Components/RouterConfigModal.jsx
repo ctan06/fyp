@@ -11,7 +11,7 @@ const RouterConfigModal = ({ router, onClose }) => {
     setError(null);
 
     try {
-      const response = await fetch("http://localhost:8000/run-playbook");
+      const response = await fetch("http://localhost:8000/ansible/run-playbook");
 
       const data = await response.json();
 
