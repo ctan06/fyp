@@ -1,6 +1,5 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useState } from "react";
+import React, { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate} from "react-router-dom";
 
 import Navbar from "./Components/Navbar";
 import Hero from "./Components/Hero";
@@ -48,7 +47,11 @@ const App = () => {
           path="/"
           element={
             <>
-              <Navbar />
+              {/* 
+              Navbar receives authentication state and logout function.
+              It is responsible for deciding whether to show "Sign In" or "Log Out".
+              */}
+              <Navbar isAuthenticated={isAuthenticated} onLogout={logout} />
 
               <section id="home"> {/*the id = home lets te navbar scroll to it*/}
                 <Hero /> {/* Show the hero section */}
@@ -70,35 +73,54 @@ const App = () => {
           }
         />
 
-        {/* Sign In Page */}
-        <Route 
-          path="/signin" element={
-          <>
-          <SignInNavbar/>
-          <SignIn />
-          </>} />
-
-        {/*Sign Up Page*/}
-        <Route path="/signup" element={
-          <>
-          <SignInNavbar/>
-          <SignUp />
-          </>} />
-        
-        <Route 
-          path ="/forgot-password" element={
+        <Route path="/signin" element={
+          !isAuthenticated ? (
             <>
-            <SignInNavbar/>
-            <ForgotPassword/>
+            <SignInNavbar />
+            <SignIn onLogin={login} />
             </>
-          } />
+          ) : (
+            <Navigate to="/dashboard" />
+          )
+        }
+        />
+
+
+        <Route path="/signup" element={
+          !isAuthenticated ? (
+          <>
+          <SignInNavbar />
+          <SignUp />
+          </>
+        ) : (
+          <Navigate to="/" />
+        )
+        }
+        />
+
+          <Route path="/forgot-password" element={
+          !isAuthenticated ? (
+          <>
+            <SignInNavbar />
+            <ForgotPassword />
+          </>
+          ) : (
+            <Navigate to="/" />
+          )
+          }
+          />
 
         <Route path="/dashboard" element={
+          isAuthenticated ? (
           <>
-          <SignInNavbar/>
-          <Dashboard />
+            <SignInNavbar />
+            <Dashboard />
           </>
-          } />
+          ) : (
+            <Navigate to="/signin" />
+          )
+        }
+        />          
 
       </Routes>
       <Footer />
