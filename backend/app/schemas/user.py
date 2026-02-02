@@ -8,8 +8,9 @@ class UserCreate(BaseModel):
 class UserOut(BaseModel):
     email: EmailStr
 
-    class Config:
-        orm_mode = True  
+    model_config = {
+        "from_attributes": True  
+    } 
 
 class UserLogin(BaseModel):
     email: EmailStr

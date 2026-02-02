@@ -36,3 +36,8 @@ def close_mongo(client):
     if client:
         client.close()
         print("MongoDB connection closed.")
+
+client, db = connect_mongo()
+if db is None:
+    raise RuntimeError("Could not connect to MongoDB") 
+users_collection = get_collection(db, "users")
