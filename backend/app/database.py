@@ -41,3 +41,5 @@ client, db = connect_mongo()
 if db is None:
     raise RuntimeError("Could not connect to MongoDB") 
 users_collection = get_collection(db, "users")
+routers_collection = get_collection(db, "routers")
+configs_collection = get_collection(db, "config_snapshots")

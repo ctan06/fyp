@@ -7,9 +7,17 @@
   tasks:
     - name: Get running configuration
       ios_command:
-        commands: show running-config
-      register: output
+        commands:
+          - show running-config
+      register: running_config
 
-    - name: display output
+    - name: Build structured router output
+      set_fact:
+        router_data:
+          name: "{{ inventory_hostname }}"
+          ip: "{{ ansible_host }}"
+          config: "{{ running_config.stdout[0] }}"
+
+    - name: Output router data as JSON
       debug:
-        var: output.stdout_lines
+        var: router_data
