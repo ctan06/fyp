@@ -15,26 +15,24 @@ import Dashboard from "./Pages/Dashboard";
 
 const App = () => {
 
-  // This state represents whether the user is authenticated or not.
-  // It is initialized using localStorage so that the login state
-  // persists even after a page refresh.
+  // The user is considered authenticated IF a JWT token
+  // exists in localStorage. This allows authentication
+  // to persist even after a page refresh.
   const [isAuthenticated, setIsAuthenticated] = useState(
-    localStorage.getItem("isAuthenticated") === "true"
+    Boolean(localStorage.getItem("token"))
   );
 
-  // This function is called after a successful login.
-  // It updates localStorage to persist authentication
-  // and updates React state to trigger a re-render.
-  const login = () => {
-    localStorage.setItem("isAuthenticated", "true");
+  /// Called after the backend successfully authenticates the user.
+  // Stores the JWT token and updates authentication state.
+  const login = (token) => {
+    localStorage.setItem("token", token);
     setIsAuthenticated(true);
   };
 
-  // This function logs the user out by removing the authentication
-  // flag from localStorage and updating the state.
-  // Once called, the UI automatically updates to the non-authenticated view.
+  /// Logs the user out by removing the JWT token.
+  // Once removed, the user is no longer authenticated.
   const logout = () => {
-    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("token");
     setIsAuthenticated(false);
   };
 

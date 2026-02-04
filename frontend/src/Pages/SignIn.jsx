@@ -1,23 +1,27 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./SignIn.css";
 
 /*
   SignIn component
 
-  This component is RESPONSIBLE ONLY for:
-  - displaying the sign-in UI
-  - triggering a login action when the form is submitted
-
-  It does NOT verify credentials (no backend yet).
-  Instead, it SIMULATES a successful login.
-
-  Props:
-  - onLogin: function passed from App.js
-    → updates authentication state globally
+  - Display the sign-in UI
+  - Collect user credentials (email & password)
+  - Send credentials to the backend for authentication
+  - If authentication succeeds:
+      → store the JWT token via onLogin(token)
+      → redirect the user to the dashboard
 */
 
 const SignIn = ({ onLogin }) => {
+  /*
+    Local component state:
+    These states store user input and UI feedback.
+  */
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
    /*
     useNavigate allows us to programmatically redirect the user
     after a successful sign-in (instead of clicking a link)
@@ -26,25 +30,50 @@ const navigate = useNavigate();
 
   /*
     This function runs when the user submits the form.
-    For now, we assume login is always successful.
+    It sends credentials to the backend and handles the response.
   */
-const handleSubmit = (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault(); // 🔹 Prevent page refresh (VERY important in React)
 
-    /*
-      TEMPORARY AUTHENTICATION LOGIC
+    try {
+      // Send login request to FastAPI backend
+      const response = await fetch("http://localhost:8000/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
 
-      Since we do not have:
-      - a database
-      - a backend
-      - real authentication
+      // If credentials are incorrect, backend returns 401
+      if (!response.ok) {
+        throw new Error("Invalid email or password");
+      }
 
-      We simulate a successful login by:
-      1. Calling onLogin() → updates isAuthenticated = true
-      2. Redirecting the user to the dashboard
-    */
-  onLogin();
-  navigate("/dashboard");
+      // Parse backend response
+      const data = await response.json();
+
+      /*
+        Backend returns:
+        {
+          access_token: "...",
+          token_type: "bearer"
+        }
+
+        We pass the token to App.jsx via onLogin(token)
+      */
+      onLogin(data.access_token);
+
+      // Redirect authenticated user to dashboard
+      navigate("/dashboard");
+
+    } catch (err) {
+      // Display error message in UI
+      setError(err.message);
+    }
 };
 
   return (
@@ -70,16 +99,21 @@ const handleSubmit = (e) => {
           {/* Form */}
           <form className="signin-form" onSubmit={handleSubmit}>
             <label htmlFor="email">Email</label>
-            <input type="email" id="email" placeholder="Enter your email" required />
+            <input type="email" id="email" placeholder="Enter your email" value={email}
+              onChange={(e) => setEmail(e.target.value)}required />
 
             <label htmlFor="password">Password</label>
-            <input type="password" id="password" placeholder="Enter your password" required />
+            <input type="password" id="password" placeholder="Enter your password" value={password}
+              onChange={(e) => setPassword(e.target.value)} required />
 
             <div className="signin-options">
               <a href="/forgot-password" className="forgot">Forgot password?</a>
             </div>
 
             <button type="submit" className="btn-signin">Sign In</button>
+
+            {/* Display backend error message */}
+            {error && <p className="signin-error">{error}</p>}
           </form>
 
           {/* Sign Up Link */}
