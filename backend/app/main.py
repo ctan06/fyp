@@ -16,4 +16,4 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(ansible.router, prefix="/ansible", tags=["Ansible"])
-app.include_router(router_routes.router)
+app.include_router(router_routes.router, prefix="/routers", tags=["routers"])

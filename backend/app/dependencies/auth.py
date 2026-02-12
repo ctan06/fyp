@@ -1,8 +1,8 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
 from config import JWT_SECRET_KEY, ALGORITHM
 from database import users_collection
+from jose import JWTError, jwt
 from bson import ObjectId
 
 # Define where the token comes from in requests

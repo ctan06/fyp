@@ -12,7 +12,7 @@ class RouterCreate(BaseModel):
 
 
 class RouterOut(BaseModel):
-    id: str = Field(..., alias="_id")
+    id: str 
     name: str
     ip: str
     created_at: datetime

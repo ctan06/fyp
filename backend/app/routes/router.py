@@ -1,12 +1,32 @@
 from fastapi import APIRouter, HTTPException, Depends
+from schemas.router import RouterCreate, RouterOut
+from utils.inventory import update_inventory_file
+from dependencies.auth import get_current_user
 from pymongo.errors import DuplicateKeyError
-from bson import ObjectId
 from database import routers_collection
 from models.router import Router
-from schemas.router import RouterCreate, RouterOut
-from dependencies.auth import get_current_user
 
-router = APIRouter(prefix="/routers", tags=["routers"])
+router = APIRouter()
+
+@router.get("/all", response_model=list[RouterOut])
+def get_all_routers(current_user=Depends(get_current_user)):
+    """
+    Get all routers from MongoDB.
+    Returns a list of routers with their id, name, IP, and created_at.
+    Only authenticated users can access.
+    """
+    routers_cursor = routers_collection.find()
+    routers_list = []
+
+    for r in routers_cursor:
+        router_obj = Router(
+            name=r["name"],
+            ip=r["ip"],
+            created_at=r.get("created_at")
+        )
+        routers_list.append(router_obj.to_response(r["_id"]))
+
+    return routers_list
 
 @router.post("/add", response_model=RouterOut)
 def add_router(router_data: RouterCreate, current_user=Depends(get_current_user)):
@@ -21,16 +41,13 @@ def add_router(router_data: RouterCreate, current_user=Depends(get_current_user)
         ip=str(router_data.ip) # converted to string to match mongodb
     )
 
-
-    # Insert into MongoDB
     try:
-        routers_collection.insert_one(new_router.to_dict())
+        result = routers_collection.insert_one(new_router.to_dict())
     except DuplicateKeyError:
-        raise HTTPException(
-            status_code=400,
-            detail="Router name or IP already exists"
-        )
+        raise HTTPException(400, "Router name or IP already exists")
+    except Exception as e:
+        raise HTTPException(500, f"Error: {str(e)}")
 
-    # update_inventory_file()
+    update_inventory_file()
 
-    return new_router
+    return new_router.to_response(result.inserted_id) 

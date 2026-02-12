@@ -45,4 +45,4 @@ routers_collection = get_collection(db, "routers")
 
 users_collection.create_index("email", unique=True)
 routers_collection.create_index("name", unique=True)
-routers_collection.create_index("ip_address", unique=True)
+routers_collection.create_index("ip", unique=True)

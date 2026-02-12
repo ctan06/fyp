@@ -1,9 +1,9 @@
+from utils.security import hash_password, verify_password, create_access_token
+from schemas.user import UserCreate, UserLogin, UserOut
 from fastapi import APIRouter, HTTPException
 from pymongo.errors import DuplicateKeyError
 from database import users_collection
 from models.user import User
-from schemas.user import UserCreate, UserLogin, UserOut
-from utils.security import hash_password, verify_password, create_access_token
 
 router = APIRouter()
 
