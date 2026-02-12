@@ -8,8 +8,8 @@ from dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/routers", tags=["routers"])
 
-@router.post("/add", response_model=RouterOut, current_user=Depends(get_current_user))
-def add_router(router_data: RouterCreate):
+@router.post("/add", response_model=RouterOut)
+def add_router(router_data: RouterCreate, current_user=Depends(get_current_user)):
     """
     Add a new router to MongoDB
     Only authenticated users can add routers
