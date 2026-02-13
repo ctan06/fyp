@@ -5,6 +5,7 @@ from dependencies.auth import get_current_user
 from pymongo.errors import DuplicateKeyError
 from database import routers_collection
 from models.router import Router
+from bson import ObjectId
 
 router = APIRouter()
 
@@ -51,3 +52,25 @@ def add_router(router_data: RouterCreate, current_user=Depends(get_current_user)
     update_inventory_file()
 
     return new_router.to_response(result.inserted_id) 
+
+@router.delete("/{router_id}", response_model=dict)
+def delete_router(router_id: str, current_user=Depends(get_current_user)):
+    """
+    Delete a router by its MongoDB _id
+    Also updates the inventory file after deletion
+    """
+    # Validate ObjectId
+    try:
+        obj_id = ObjectId(router_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid router ID")
+
+    # Attempt deletion
+    result = routers_collection.delete_one({"_id": obj_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Router not found")
+
+    # Update the inventory file
+    update_inventory_file()
+
+    return {"message": f"Router {router_id} deleted successfully"}
