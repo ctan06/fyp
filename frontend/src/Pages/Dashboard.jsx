@@ -46,7 +46,6 @@ const Dashboard = () => {
 
   //This is the function that checks for empty fields and validates the IP address format 
   // before adding a new router to the list.
-  //If there are any errors, it sets an error message that is displayed to the user.
   const handleAddRouter = async (e) => {
     e.preventDefault(); // Prevent default form submission (page refresh)
 
@@ -97,6 +96,42 @@ const Dashboard = () => {
     }
   };
 
+  //This function deletes router from backend and updates frontend state to remove the deleted router.
+  const handleDeleteRouter = async (routerId) => {
+    try {
+      //Retrieve JWT token from localStorage for authentication.
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      //Send DELETE request to backend to delete the router with the specified ID.
+      const response = await fetch(
+        `http://localhost:8000/routers/${routerId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      //Handle backend errors
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Failed to delete router");
+      }
+
+      //If deletion is successful, update frontend state
+      setRouters((prevRouters) =>
+        prevRouters.filter((router) => router.id !== routerId)
+      );
+
+    } catch (err) {
+      console.error("Error deleting router:", err);
+      setError(err.message);
+    }
+  };
+
+
   return (
     <div className="dashboard-container">
       <h1>Network Dashboard</h1>
@@ -114,6 +149,9 @@ const Dashboard = () => {
             <div key={router.id} className="router-card">
               <h3>{router.name}</h3>
               <p>IP: {router.ip}</p>
+              <button className="delete-btn" onClick={() => handleDeleteRouter(router.id)}>
+                Delete
+              </button>
             </div>
           ))}
         </div>
