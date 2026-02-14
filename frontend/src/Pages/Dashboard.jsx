@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Dashboard.css";
 
 const Dashboard = () => {
@@ -7,6 +7,35 @@ const Dashboard = () => {
   const [routerName, setRouterName] = useState(""); //stores the name of the router being added
   const [routerIP, setRouterIP] = useState(""); //stores the IP address of the router being added
   const [error, setError] = useState(""); //stores any error messages related to form validation or backend errors
+
+  // Fetch routers from backend when Dashboard mounts
+  useEffect(() => {
+    const fetchRouters = async () => {
+      try {
+        //JWT Authorization token
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const response = await fetch("http://localhost:8000/routers/all", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch routers");
+
+        //convert JSON response from backend into JavaScript object
+        const routersFromBackend = await response.json();
+        setRouters(routersFromBackend);
+      } catch (err) {
+        console.error("Error fetching routers:", err);
+      }
+    };
+
+    //immediately invoke the function to fetch routers when the component (dashboard) mounts
+    fetchRouters();
+  }, []);
 
   const validateIP = (ip) => {
     const ipRegex =
@@ -51,7 +80,7 @@ const Dashboard = () => {
         throw new Error(errData.detail || "Failed to add router");
       }
 
-      // Update frontend state with backend response
+      // Update frontend state with backend response (shows newly added routers)
       const newRouterFromBackend = await response.json();
       setRouters([...routers, newRouterFromBackend]);
 
@@ -84,7 +113,7 @@ const Dashboard = () => {
           {routers.map((router) => (
             <div key={router.id} className="router-card">
               <h3>{router.name}</h3>
-              <p>{router.ip}</p>
+              <p>IP: {router.ip}</p>
             </div>
           ))}
         </div>

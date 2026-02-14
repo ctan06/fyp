@@ -99,3 +99,22 @@ h1 {
   color: red;
   margin-bottom: 10px;
 }
+
+.router-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.router-list h3{
+  color: #0f006d;
+}
+
+.router-card {
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 200px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background-color: #fff;
+}
