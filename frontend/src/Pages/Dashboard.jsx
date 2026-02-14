@@ -2,43 +2,70 @@ import React, { useState } from "react";
 import "./Dashboard.css";
 
 const Dashboard = () => {
-  const [routers, setRouters] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const [routerName, setRouterName] = useState("");
-  const [routerIP, setRouterIP] = useState("");
-  const [error, setError] = useState("");
+  const [routers, setRouters] = useState([]); //stored routers currently displayed in UI
+  const [showForm, setShowForm] = useState(false); //controls visibility of the add router form 
+  const [routerName, setRouterName] = useState(""); //stores the name of the router being added
+  const [routerIP, setRouterIP] = useState(""); //stores the IP address of the router being added
+  const [error, setError] = useState(""); //stores any error messages related to form validation or backend errors
 
   const validateIP = (ip) => {
     const ipRegex =
-      /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])$/.replace(/\s+/g, "");
+      /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])$/;
 
     return ipRegex.test(ip);
   };
 
-  const handleAddRouter = (e) => {
-    e.preventDefault();
+  //This is the function that checks for empty fields and validates the IP address format 
+  // before adding a new router to the list.
+  //If there are any errors, it sets an error message that is displayed to the user.
+  const handleAddRouter = async (e) => {
+    e.preventDefault(); // Prevent default form submission (page refresh)
 
     if (!routerName || !routerIP) {
-      setError("All fields are required.");
+      setError("All fields are required."); //ensure user entered both fields
       return;
     }
 
     if (!validateIP(routerIP)) {
-      setError("Invalid IP format. Use x.y.z.w (0-255)");
+      setError("Invalid IP format. Use x.y.z.w (0-255)"); //ensure user entered a valid IP address format
       return;
     }
 
-    const newRouter = {
-      id: Date.now(),
-      name: routerName,
-      ip: routerIP,
-    };
+    try {
+      //fetch request to backend to add new router
+      const response = await fetch("http://localhost:8000/routers/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // JWT included for authentication
+        },
+        body: JSON.stringify({
+          name: routerName,
+          ip: routerIP,
+        }),
+      });
 
-    setRouters([...routers, newRouter]);
-    setRouterName("");
-    setRouterIP("");
-    setError("");
-    setShowForm(false);
+      // Handle backend errors
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Failed to add router");
+      }
+
+      // Update frontend state with backend response
+      const newRouterFromBackend = await response.json();
+      setRouters([...routers, newRouterFromBackend]);
+
+      // Reset form and close modal
+      setRouterName("");
+      setRouterIP("");
+      setError("");
+      setShowForm(false);
+    }
+    //catch any errors (backend + network) 
+    catch (err) {
+      console.error(err);
+      setError(err.message);
+    }
   };
 
   return (
