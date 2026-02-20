@@ -5,7 +5,7 @@ class UserCreate(BaseModel):
     password: str = Field(..., min_length=6)
 
 class UserOut(BaseModel):
-    id: str  # Mongo-generated ObjectId
+    id: str  
     email: EmailStr
 
     model_config = {
