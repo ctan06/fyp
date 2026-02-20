@@ -13,11 +13,11 @@ def register(user: UserCreate):
     new_user = User(email=user.email, password=hashed_pw)
 
     try:
-        users_collection.insert_one(new_user.to_dict())
+        result = users_collection.insert_one(new_user.to_dict())
     except DuplicateKeyError:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    return {"email": user.email, "created_at": new_user.created_at}
+    return new_user.to_response(result.inserted_id)
 
 @router.post("/login")
 def login(user: UserLogin):
@@ -30,4 +30,4 @@ def login(user: UserLogin):
 
     token = create_access_token({"sub": str(db_user["_id"])})
 
-    return {"access_token": token, "token_type": "bearer", "user": {"email": db_user["email"]}}
+    return {"access_token": token, "token_type": "bearer", "user": {"id": str(db_user["_id"]), "email": db_user["email"]}}

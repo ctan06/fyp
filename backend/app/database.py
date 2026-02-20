@@ -42,7 +42,10 @@ if db is None:
     raise RuntimeError("Could not connect to MongoDB") 
 users_collection = get_collection(db, "users")
 routers_collection = get_collection(db, "routers")
+router_configs_collection = get_collection(db,"router_configurations")
 
 users_collection.create_index("email", unique=True)
 routers_collection.create_index("name", unique=True)
 routers_collection.create_index("ip", unique=True)
+#MongoDB will index documents first by router_id, then sort by created_at (descending).
+router_configs_collection.create_index([("router_id", 1), ("created_at", -1)])
