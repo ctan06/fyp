@@ -7,6 +7,7 @@ const Dashboard = () => {
   const [routerName, setRouterName] = useState(""); //stores the name of the router being added
   const [routerIP, setRouterIP] = useState(""); //stores the IP address of the router being added
   const [error, setError] = useState(""); //stores any error messages related to form validation or backend errors
+  const [selectedConfig, setSelectedConfig] = useState(null); //stores the configuration data of the selected router for viewing
 
   // Fetch routers from backend when Dashboard mounts
   useEffect(() => {
@@ -131,6 +132,104 @@ const Dashboard = () => {
     }
   };
 
+  // This function retrieves the latest configuration for a specific router from 
+  // the backend and logs it to the console.
+    /**
+   * Flow:
+   * 1. Get the list of configs for the router (/router/{router_id}/configs)
+   * 2. Take the first item (newest version)
+   * 3. Fetch the full config using /view-config/{config_id}
+   */
+  const handleViewConfiguration = async (routerId) => {
+    try {
+      //Retrieve JWT token for authentication
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      //Get the list of configs for this router (latest first)
+      const listResponse = await fetch(
+        `http://localhost:8000/ansible/router/${routerId}/configs`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // JWT included for authentication
+          },
+        }
+      );
+
+      //Handle backend errors
+      if (!listResponse.ok) {
+        const errData = await listResponse.json();
+        throw new Error(errData.detail || "Failed to fetch router configs");
+      }
+
+      //Parse the list of configs from the response
+      const configsList = await listResponse.json();
+
+      //Check if there are any configs available for this router
+      if (configsList.length === 0) {
+        console.log("No configurations found for this router.");
+        return;
+      }
+
+      //Take the newest config (first in the list)
+      const newestConfigId = configsList[0].id;
+
+      //Fetch the full configuration
+      const configResponse = await fetch(
+        `http://localhost:8000/ansible/view-config/${newestConfigId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // JWT included for authentication
+          },
+        }
+      );
+
+      //Handle backend errors
+      if (!configResponse.ok) {
+        const errData = await configResponse.json();
+        throw new Error(errData.detail || "Failed to fetch full configuration");
+      }
+
+      //Parse the configuration data from the response
+      const configData = await configResponse.json();
+
+      // Extract raw ansible output
+      const rawOutput = configData.config;
+
+      // Find JSON part inside ansible output
+      const jsonStart = rawOutput.indexOf("{");
+      const jsonEnd = rawOutput.lastIndexOf("}") + 1;
+
+      // If we can't find a valid JSON object, throw an error
+      if (jsonStart === -1 || jsonEnd === -1) {
+        throw new Error("Could not extract router data");
+      }
+
+      // Parse the JSON string to get structured data
+      const jsonString = rawOutput.substring(jsonStart, jsonEnd);
+      const parsed = JSON.parse(jsonString);
+
+      // Extract clean router data
+      const routerName = parsed.router_data.name;
+      const routerIP = parsed.router_data.ip;
+      const routerConfig = parsed.router_data.config;
+
+      // Save to state so UI can display it
+      setSelectedConfig({
+        name: routerName,
+        ip: routerIP,
+        config: routerConfig,
+      });
+
+    } catch (err) {
+      console.error(err);
+      setError(err.message); // Show error in UI
+    }
+  };
 
   return (
     <div className="dashboard-container">
@@ -149,9 +248,21 @@ const Dashboard = () => {
             <div key={router.id} className="router-card">
               <h3>{router.name}</h3>
               <p>IP: {router.ip}</p>
-              <button className="delete-btn" onClick={() => handleDeleteRouter(router.id)}>
-                Delete
-              </button>
+              <div className="router-buttons">
+                <button
+                  className="view-config-btn"
+                  onClick={() => handleViewConfiguration(router.id)}
+                >
+                  View Configuration
+                </button>
+
+                <button
+                  className="delete-btn"
+                  onClick={() => handleDeleteRouter(router.id)}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -186,13 +297,49 @@ const Dashboard = () => {
 
                 <button
                   type="button"
-                  className="cancel-btn"
+                  className="add-cancel-btn"
                   onClick={() => setShowForm(false)}
                 >
                   Cancel
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {selectedConfig && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>Router Configuration</h2>
+
+            <p><strong>Name:</strong> {selectedConfig.name}</p>
+            <p><strong>IP Address:</strong> {selectedConfig.ip}</p>
+
+            <div
+              style={{
+                marginTop: "15px",
+                padding: "15px",
+                backgroundColor: "#1e1e1e",
+                color: "#00ff88",
+                fontFamily: "monospace",
+                whiteSpace: "pre-wrap",
+                maxHeight: "400px",
+                overflowY: "scroll",
+                borderRadius: "8px"
+              }}
+            >
+              {selectedConfig.config}
+            </div>
+
+            <div className="modal-buttons">
+              <button
+                className="view-cancel-btn"
+                onClick={() => setSelectedConfig(null)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
