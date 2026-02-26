@@ -42,7 +42,7 @@ def fetch_all_configs(current_user=Depends(get_current_user)):
                 check=True,
             )
 
-            config_lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+            config_lines = result.stdout.splitlines()
             config_text = "\n".join(config_lines)
             new_hash = RouterConfig.generate_hash(config_text)
 
@@ -169,6 +169,35 @@ def view_config(config_id: str, current_user=Depends(get_current_user)):
     )
 
     return router_config.to_response(config_doc["_id"])
+
+
+@router.get("/router/{router_id}/latest-config")
+def get_latest_config(router_id: str, current_user=Depends(get_current_user)):
+
+    try:
+        obj_id = ObjectId(router_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid router ID")
+
+    router = routers_collection.find_one({"_id": obj_id})
+    if not router:
+        raise HTTPException(status_code=404, detail="Router not found")
+
+    latest_config = router_configs_collection.find_one(
+        {"router_id": router_id},
+        sort=[("version", -1)]
+    )
+
+    if not latest_config:
+        raise HTTPException(status_code=404, detail="No configurations found")
+
+    return {
+        "id": str(latest_config["_id"]),
+        "router_id": router_id,
+        "version": latest_config["version"],
+        "config": latest_config["config"],
+        "created_at": latest_config["created_at"]
+    }
 
 @router.get("/router/{router_id}/configs")
 def list_router_configs(router_id: str, current_user=Depends(get_current_user)):
