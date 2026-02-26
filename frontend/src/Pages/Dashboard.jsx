@@ -8,6 +8,7 @@ const Dashboard = () => {
   const [routerIP, setRouterIP] = useState(""); //stores the IP address of the router being added
   const [error, setError] = useState(""); //stores any error messages related to form validation or backend errors
   const [selectedConfig, setSelectedConfig] = useState(null); //stores the configuration data of the selected router for viewing
+  const [fetchingRouterId, setFetchingRouterId] = useState(null); //stores the ID of the router currently being fetched for configuration (used to show loading state)
 
   // Fetch routers from backend when Dashboard mounts
   useEffect(() => {
@@ -231,6 +232,55 @@ const Dashboard = () => {
     }
   };
 
+  // This function triggers the backend to fetch the latest configuration for a specific router.
+  const handleFetchConfiguration = async (routerId) => {
+    try {
+      //Retrieve JWT token for authentication
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      // Set loading state for this specific router
+      setFetchingRouterId(routerId);
+      setError("");
+
+      //Send POST request to backend to fetch the latest configuration for the specified router ID.
+      const response = await fetch(
+        `http://localhost:8000/ansible/fetch-config/${routerId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // JWT included for authentication
+          },
+        }
+      );
+
+      //Handle backend errors
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Failed to fetch configuration");
+      }
+
+      //Parse the response from the backend to check if the configuration was updated and 
+      // to get the new version number.
+      const result = await response.json();
+
+      // Show an alert to the user indicating whether the configuration was updated or 
+      // if no changes were detected, along with the current version number.
+      if (result.changed) {
+        alert(`Configuration updated to version ${result.data.version}`);
+      } else {
+        alert(`No changes detected. Current version: ${result.data.version}`);
+      }
+
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setFetchingRouterId(null); // stop loading
+    }
+  };
+
   return (
     <div className="dashboard-container">
       <h1>Network Dashboard</h1>
@@ -249,6 +299,17 @@ const Dashboard = () => {
               <h3>{router.name}</h3>
               <p>IP: {router.ip}</p>
               <div className="router-buttons">
+                
+                <button
+                  className="fetch-config-btn"
+                  onClick={() => handleFetchConfiguration(router.id)}
+                  disabled={fetchingRouterId === router.id}
+                >
+                  {fetchingRouterId === router.id
+                    ? "Fetching..."
+                    : "Fetch Configuration"}
+                </button>
+
                 <button
                   className="view-config-btn"
                   onClick={() => handleViewConfiguration(router.id)}

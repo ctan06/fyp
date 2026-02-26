@@ -157,3 +157,21 @@ h1 {
   cursor: pointer;
   margin-top: 10px;
 }
+
+.fetch-config-btn {
+  background-color: #0f006d;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.fetch-config-btn:hover {
+  background-color: #45a049;
+}
+
+.fetch-config-btn:disabled {
+  background-color: gray;
+  cursor: not-allowed;
+}
