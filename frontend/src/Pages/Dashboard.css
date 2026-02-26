@@ -175,3 +175,9 @@ h1 {
   background-color: gray;
   cursor: not-allowed;
 }
+
+.fetch-message {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}

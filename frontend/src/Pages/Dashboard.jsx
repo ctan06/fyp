@@ -7,8 +7,11 @@ const Dashboard = () => {
   const [routerName, setRouterName] = useState(""); //stores the name of the router being added
   const [routerIP, setRouterIP] = useState(""); //stores the IP address of the router being added
   const [error, setError] = useState(""); //stores any error messages related to form validation or backend errors
+  //View configuration states
   const [selectedConfig, setSelectedConfig] = useState(null); //stores the configuration data of the selected router for viewing
+  //Fetch configuration loading states
   const [fetchingRouterId, setFetchingRouterId] = useState(null); //stores the ID of the router currently being fetched for configuration (used to show loading state)
+  const [fetchMessages, setFetchMessages] = useState({}); //stores messages related to fetching configuration for each router (e.g. success or error messages)
 
   // Fetch routers from backend when Dashboard mounts
   useEffect(() => {
@@ -265,13 +268,29 @@ const Dashboard = () => {
       // to get the new version number.
       const result = await response.json();
 
-      // Show an alert to the user indicating whether the configuration was updated or 
-      // if no changes were detected, along with the current version number.
+      // Check whether configuration changed or not
       if (result.changed) {
-        alert(`Configuration updated to version ${result.data.version}`);
+        // If configuration changed, store success message for this specific router
+        setFetchMessages((prev) => ({
+          ...prev, // keep previous router messages
+          [routerId]: `New configuration detected! Version ${result.data.version} saved.`, // show new version in message to provide feedback to user
+        }));
       } else {
-        alert(`No changes detected. Current version: ${result.data.version}`);
+        // If no changes detected, store informational message
+        setFetchMessages((prev) => ({
+          ...prev,
+          [routerId]: `No new updates. Current version is ${result.data.version}.`, // show current version even if no changes to provide feedback to user
+        }));
       }
+
+      // Optional: Automatically remove the message after 5 seconds
+      setTimeout(() => {
+        setFetchMessages((prev) => {
+          const updated = { ...prev };
+          delete updated[routerId]; // remove only this router's message
+          return updated;
+        });
+      }, 5000);
 
     } catch (err) {
       console.error(err);
@@ -324,6 +343,13 @@ const Dashboard = () => {
                   Delete
                 </button>
               </div>
+              
+              {/* Display fetch result message for this router (if exists) */}
+              {fetchMessages[router.id] && (
+                <p className="fetch-message">
+                  {fetchMessages[router.id]}
+                </p>
+              )}
             </div>
           ))}
         </div>
