@@ -12,6 +12,9 @@ const Dashboard = () => {
   //Fetch configuration loading states
   const [fetchingRouterId, setFetchingRouterId] = useState(null); //stores the ID of the router currently being fetched for configuration (used to show loading state)
   const [fetchMessages, setFetchMessages] = useState({}); //stores messages related to fetching configuration for each router (e.g. success or error messages)
+  // Fetch ALL configurations states
+  const [fetchAllLoading, setFetchAllLoading] = useState(false);
+  const [fetchAllResult, setFetchAllResult] = useState(null);
 
   // Fetch routers from backend when Dashboard mounts
   useEffect(() => {
@@ -300,16 +303,80 @@ const Dashboard = () => {
     }
   };
 
+  // Fetch configurations for ALL routers
+  const handleFetchAllConfigurations = async () => {
+    try {
+      //Retrieve JWT token for authentication
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      // Set loading state and clear previous results/errors
+      setFetchAllLoading(true);
+      setFetchAllResult(null);
+      setError("");
+
+      //Send POST request to backend to fetch latest configurations for all routers.
+      const response = await fetch(
+        "http://localhost:8000/ansible/fetch-all-configs",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // JWT included for authentication
+          },
+        }
+      );
+
+      //Handle backend errors
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Failed to fetch all configurations");
+      }
+
+      //Parse the response from the backend which should include lists of which routers were updated,
+      // skipped, or failed during the fetch process.
+      const result = await response.json();
+
+      // Store the result in state to display in the UI
+      setFetchAllResult(result);
+
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setFetchAllLoading(false);
+    }
+  };
+
   return (
     <div className="dashboard-container">
       <h1>Network Dashboard</h1>
 
-      <button
-        className="add-router-btn"
-        onClick={() => setShowForm(true)}
-      >
-        + Add Router
-      </button>
+      <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+        <button
+          className="add-router-btn"
+          onClick={() => setShowForm(true)}
+        >
+          + Add Router
+        </button>
+
+        <button
+          className="fetchAll-config-btn"
+          onClick={handleFetchAllConfigurations}
+          disabled={fetchAllLoading}
+        >
+          {fetchAllLoading ? "Fetching All..." : "Fetch All Configurations"}
+        </button>
+      </div>
+        {fetchAllResult && (
+          <div className="fetch-all-result">
+            <h3>Fetch All Results</h3>
+
+            <p><strong>Updated:</strong> {fetchAllResult.updated.join(", ") || "None"}</p>
+            <p><strong>Skipped:</strong> {fetchAllResult.skipped.join(", ") || "None"}</p>
+            <p><strong>Failed:</strong> {fetchAllResult.failed.join(", ") || "None"}</p>
+          </div>
+        )}
 
       {routers.length > 0 && (
         <div className="router-list">
