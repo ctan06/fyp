@@ -15,6 +15,10 @@ const Dashboard = () => {
   // Fetch ALL configurations states
   const [fetchAllLoading, setFetchAllLoading] = useState(false);
   const [fetchAllResult, setFetchAllResult] = useState(null);
+  // History modal states
+  const [showHistoryModal, setShowHistoryModal] = useState(false); // controls history modal visibility
+  const [historyConfigs, setHistoryConfigs] = useState([]); // stores all configs for selected router
+  const [loadingHistoryRouterId, setLoadingHistoryRouterId] = useState(null); // loading state for history fetch
 
   // Fetch routers from backend when Dashboard mounts
   useEffect(() => {
@@ -348,6 +352,65 @@ const Dashboard = () => {
     }
   };
 
+  // Fetch all config versions for a router (GET /router/{router_id}/configs)
+  const handleViewHistory = async (routerId) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      setLoadingHistoryRouterId(routerId);
+      setShowHistoryModal(true);
+
+      const res = await fetch(
+        `http://localhost:8000/ansible/router/${routerId}/configs`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to fetch router history");
+
+      const configs = await res.json();
+      setHistoryConfigs(configs);
+
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setLoadingHistoryRouterId(null);
+    }
+  };
+
+  // View a specific config version (GET /view-config/{config_id})
+  const handleViewConfigVersion = async (configId) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const res = await fetch(
+        `http://localhost:8000/ansible/view-config/${configId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to fetch config version");
+
+      const data = await res.json();
+
+      // Use the existing modal to show config
+      setSelectedConfig({
+        name: data.router_name,
+        ip: data.router_ip,
+        config: data.config,
+      });
+
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    }
+  };
+
   return (
     <div className="dashboard-container">
       <h1>Network Dashboard</h1>
@@ -401,6 +464,14 @@ const Dashboard = () => {
                   onClick={() => handleViewConfiguration(router.id)}
                 >
                   View Configuration
+                </button>
+
+                <button
+                  className="view-history-btn"
+                  onClick={() => handleViewHistory(router.id)}
+                  disabled={loadingHistoryRouterId === router.id}
+                >
+                  {loadingHistoryRouterId === router.id ? "Loading History..." : "View History"}
                 </button>
 
                 <button
@@ -494,6 +565,40 @@ const Dashboard = () => {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showHistoryModal && (
+        <div className="history-modal-overlay">
+          <div className="history-modal">
+            <h2>Config History</h2>
+            {historyConfigs.length === 0 ? (
+              <p>No history available.</p>
+            ) : (
+              <div className="history-list">
+                {historyConfigs.map((cfg) => (
+                  <div key={cfg.id} className="history-item">
+                    <p>
+                      <strong>Version:</strong> {cfg.version} |{" "}
+                      <strong>Fetched At:</strong> {new Date(cfg.created_at).toLocaleString()}
+                    </p>
+                    <button
+                      className="view-configVersion-btn"
+                      onClick={() => handleViewConfigVersion(cfg.id)}
+                    >
+                      View Config
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              className="history-close-btn"
+              onClick={() => setShowHistoryModal(false)}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
