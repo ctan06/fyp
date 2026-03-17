@@ -74,3 +74,37 @@ def delete_router(router_id: str, current_user=Depends(get_current_user)):
     update_inventory_file()
 
     return {"message": f"Router {router_id} deleted successfully"}
+
+@router.patch("/{router_id}", response_model=RouterOut)
+def update_router(router_id: str, router_data: RouterCreate, current_user=Depends(get_current_user)):
+    """
+    Update an existing router's name and IP by its MongoDB _id
+    Also updates the inventory file after update
+    """
+    # Validate ObjectId
+    try:
+        obj_id = ObjectId(router_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid router ID")
+
+    # Create update document
+    update_doc = {
+        "name": router_data.name,
+        "ip": str(router_data.ip) # converted to string to match mongodb
+    }
+
+    # Attempt update
+    result = routers_collection.update_one({"_id": obj_id}, {"$set": update_doc})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Router not found")
+
+    # Update the inventory file
+    update_inventory_file()
+
+    # Return updated router info
+    updated_router = routers_collection.find_one({"_id": obj_id})
+    return Router(
+        name=updated_router["name"],
+        ip=updated_router["ip"],
+        created_at=updated_router.get("created_at")
+    ).to_response(updated_router["_id"])
