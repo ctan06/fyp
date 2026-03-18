@@ -19,6 +19,7 @@ const Dashboard = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false); // controls history modal visibility
   const [historyConfigs, setHistoryConfigs] = useState([]); // stores all configs for selected router
   const [loadingHistoryRouterId, setLoadingHistoryRouterId] = useState(null); // loading state for history fetch
+  const [selectedHistoryConfig, setSelectedHistoryConfig] = useState(null); // stores selected config from history to view in modal
 
   // Fetch routers from backend when Dashboard mounts
   useEffect(() => {
@@ -342,11 +343,12 @@ const Dashboard = () => {
 
       const data = await res.json();
 
-      // Use the existing modal to show config
-      setSelectedConfig({
+      // Set the selected history config to view in the modal
+      setSelectedHistoryConfig({
         name: data.router_name,
         ip: data.router_ip,
         config: data.config,
+        version: data.version,
       });
 
     } catch (err) {
@@ -543,6 +545,39 @@ const Dashboard = () => {
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {selectedHistoryConfig && (
+        <div className="history-modal-overlay">
+          <div className="modal">
+            <h2>Configuration Version: {selectedHistoryConfig.version}</h2>
+
+            <div
+              style={{
+                marginTop: "15px",
+                padding: "15px",
+                backgroundColor: "#1e1e1e",
+                color: "#00ff88",
+                fontFamily: "monospace",
+                whiteSpace: "pre-wrap",
+                maxHeight: "400px",
+                overflowY: "scroll",
+                borderRadius: "8px"
+              }}
+            >
+              {selectedHistoryConfig.config}
+            </div>
+
+            <div className="modal-buttons">
+              <button
+                className="view-cancel-btn"
+                onClick={() => setSelectedHistoryConfig(null)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
