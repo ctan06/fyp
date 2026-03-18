@@ -143,102 +143,46 @@ const Dashboard = () => {
     }
   };
 
-  // This function retrieves the latest configuration for a specific router from 
-  // the backend and logs it to the console.
-    /**
-   * Flow:
-   * 1. Get the list of configs for the router (/router/{router_id}/configs)
-   * 2. Take the first item (newest version)
-   * 3. Fetch the full config using /view-config/{config_id}
-   */
+  // This function fetches the latest configuration for a specific router and displays it in a modal.
   const handleViewConfiguration = async (routerId) => {
     try {
-      //Retrieve JWT token for authentication
+      // Get JWT token
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      //Get the list of configs for this router (latest first)
-      const listResponse = await fetch(
-        `http://localhost:8000/ansible/router/${routerId}/configs`,
+      // Optional: clear previous error
+      setError("");
+
+      // Fetch latest config from new backend route
+      const response = await fetch(
+        `http://localhost:8000/ansible/router/${routerId}/latest-config`,
         {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // JWT included for authentication
+            Authorization: `Bearer ${token}`,
           },
         }
       );
 
-      //Handle backend errors
-      if (!listResponse.ok) {
-        const errData = await listResponse.json();
-        throw new Error(errData.detail || "Failed to fetch router configs");
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Failed to fetch latest configuration");
       }
 
-      //Parse the list of configs from the response
-      const configsList = await listResponse.json();
+      const data = await response.json();
 
-      //Check if there are any configs available for this router
-      if (configsList.length === 0) {
-        console.log("No configurations found for this router.");
-        return;
-      }
-
-      //Take the newest config (first in the list)
-      const newestConfigId = configsList[0].id;
-
-      //Fetch the full configuration
-      const configResponse = await fetch(
-        `http://localhost:8000/ansible/view-config/${newestConfigId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // JWT included for authentication
-          },
-        }
-      );
-
-      //Handle backend errors
-      if (!configResponse.ok) {
-        const errData = await configResponse.json();
-        throw new Error(errData.detail || "Failed to fetch full configuration");
-      }
-
-      //Parse the configuration data from the response
-      const configData = await configResponse.json();
-
-      // Extract raw ansible output
-      const rawOutput = configData.config;
-
-      // Find JSON part inside ansible output
-      const jsonStart = rawOutput.indexOf("{");
-      const jsonEnd = rawOutput.lastIndexOf("}") + 1;
-
-      // If we can't find a valid JSON object, throw an error
-      if (jsonStart === -1 || jsonEnd === -1) {
-        throw new Error("Could not extract router data");
-      }
-
-      // Parse the JSON string to get structured data
-      const jsonString = rawOutput.substring(jsonStart, jsonEnd);
-      const parsed = JSON.parse(jsonString);
-
-      // Extract clean router data
-      const routerName = parsed.router_data.name;
-      const routerIP = parsed.router_data.ip;
-      const routerConfig = parsed.router_data.config;
-
-      // Save to state so UI can display it
+      // Set the selected config state for the modal
       setSelectedConfig({
-        name: routerName,
-        ip: routerIP,
-        config: routerConfig,
+        router_id: data.router_id,
+        version: data.version,
+        config: data.config,
+        created_at: data.created_at,
       });
 
     } catch (err) {
       console.error(err);
-      setError(err.message); // Show error in UI
+      setError(err.message);
     }
   };
 
@@ -538,8 +482,8 @@ const Dashboard = () => {
           <div className="modal">
             <h2>Router Configuration</h2>
 
-            <p><strong>Name:</strong> {selectedConfig.name}</p>
-            <p><strong>IP Address:</strong> {selectedConfig.ip}</p>
+            <p><strong>Version:</strong> {selectedConfig.version}</p>
+            <p><strong>Fetched At:</strong> {new Date(selectedConfig.created_at).toLocaleString()}</p>
 
             <div
               style={{
