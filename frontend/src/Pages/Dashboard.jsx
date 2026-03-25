@@ -20,6 +20,12 @@ const Dashboard = () => {
   const [historyConfigs, setHistoryConfigs] = useState([]); // stores all configs for selected router
   const [loadingHistoryRouterId, setLoadingHistoryRouterId] = useState(null); // loading state for history fetch
   const [selectedHistoryConfig, setSelectedHistoryConfig] = useState(null); // stores selected config from history to view in modal
+  // Edit router states
+  const [showEditForm, setShowEditForm] = useState(false); // controls edit form visibility
+  const [editRouterId, setEditRouterId] = useState(null); // stores the ID of the router being edited
+  const [editRouterName, setEditRouterName] = useState(""); // stores the new name for the router being edited
+  const [editRouterIP, setEditRouterIP] = useState(""); // stores the new IP for the router being edited
+  const [editLoading, setEditLoading] = useState(false); // stores the loading state for the edit operation
 
   // Fetch routers from backend when Dashboard mounts
   useEffect(() => {
@@ -357,6 +363,80 @@ const Dashboard = () => {
     }
   };
 
+  // This function is called when the user clicks the "Edit" button for a specific router.
+  const handleOpenEdit = (router) => {
+    setEditRouterId(router.id); // store the ID of the router being edited
+    setEditRouterName(router.name); // pre-fill the name field with the current router name
+    setEditRouterIP(router.ip); // pre-fill the IP field with the current router IP
+    setShowEditForm(true); // show the edit form modal
+    setError("");
+  };
+
+  // This function handles the submission of the edit router form.
+  // It validates the input, sends a PATCH request to the backend to update the router,
+  // and updates the frontend state with the new router information if successful.
+  const handleEditRouter = async (e) => {
+    e.preventDefault();
+
+    if (!editRouterName || !editRouterIP) { //check for empty fields
+      setError("All fields are required.");
+      return;
+    }
+
+    if (!validateIP(editRouterIP)) { //validate IP address format
+      setError("Invalid IP format.");
+      return;
+    }
+
+    try {
+      setEditLoading(true);
+
+      const token = localStorage.getItem("token"); //get JWT token for authentication
+
+      const response = await fetch(
+        `http://localhost:8000/routers/${editRouterId}`, //send PATCH request to update the router with the specified ID
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // JWT included for authentication
+          },
+          body: JSON.stringify({ //send the updated name and IP in the request body
+            name: editRouterName,
+            ip: editRouterIP,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Failed to update router");
+      }
+
+      const updatedRouter = await response.json(); //get the updated router data from the backend response
+
+      // Update the frontend state by mapping through the existing routers and replacing the edited router with the updated data from the backend
+      setRouters((prevRouters) =>
+        prevRouters.map((r) =>
+          r.id === editRouterId ? updatedRouter : r
+        )
+      );
+
+      // Reset edit form state and close the modal
+      setShowEditForm(false); 
+      setEditRouterId(null);
+      setEditRouterName("");
+      setEditRouterIP("");
+      setError("");
+
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   return (
     <div className="dashboard-container">
       <h1>Network Dashboard</h1>
@@ -421,6 +501,13 @@ const Dashboard = () => {
                 </button>
 
                 <button
+                  className="edit-btn"
+                  onClick={() => handleOpenEdit(router)}
+                >
+                  Edit
+                </button>
+
+                <button
                   className="delete-btn"
                   onClick={() => handleDeleteRouter(router.id)}
                 >
@@ -470,6 +557,44 @@ const Dashboard = () => {
                   type="button"
                   className="add-cancel-btn"
                   onClick={() => setShowForm(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showEditForm && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>Edit Router</h2>
+
+            <form onSubmit={handleEditRouter}>
+              <input
+                type="text"
+                value={editRouterName}
+                onChange={(e) => setEditRouterName(e.target.value)}
+              />
+
+              <input
+                type="text"
+                value={editRouterIP}
+                onChange={(e) => setEditRouterIP(e.target.value)}
+              />
+
+              {error && <p className="error">{error}</p>}
+
+              <div className="modal-buttons">
+                <button type="submit" className="save-btn" disabled={editLoading}>
+                  {editLoading ? "Saving..." : "Save Changes"}
+                </button>
+
+                <button
+                  type="button"
+                  className="add-cancel-btn"
+                  onClick={() => setShowEditForm(false)}
                 >
                   Cancel
                 </button>

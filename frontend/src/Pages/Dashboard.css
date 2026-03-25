@@ -130,7 +130,7 @@ h1 {
 }
 
 .delete-btn:hover {
-  background-color: #cc0000;
+  background-color: #ff0000;
 }
 
 .router-buttons {
@@ -148,7 +148,7 @@ h1 {
 }
 
 .view-config-btn:hover {
-  background-color: #45a049;
+  background-color: #147efb;
 }
 
 .view-cancel-btn {
@@ -171,7 +171,7 @@ h1 {
 }
 
 .fetch-config-btn:hover {
-  background-color: #45a049;
+  background-color: #53d769;
 }
 
 .fetch-config-btn:disabled {
@@ -237,7 +237,7 @@ h1 {
 }
 
 .view-history-btn:hover {
-  background-color: #ff8800;
+  background-color: #fd9426;
 }
 
 /* Overlay specific for history modal */
@@ -320,7 +320,7 @@ h1 {
 }
 
 .history-close-btn:hover {
-  background-color: #dd3333;
+  background-color: #ff0000;
 }
 
 .history-modal-overlay {
@@ -338,4 +338,18 @@ h1 {
 
 .history-modal-overlay {
   z-index: 1000;
+}
+
+.edit-btn {
+  align-self: flex-end;
+  background-color: #0f006d;
+  border: none;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.edit-btn:hover {
+  background-color: #ac59f4
 }
