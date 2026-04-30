@@ -9,6 +9,7 @@ const Dashboard = () => {
   const [error, setError] = useState(""); //stores any error messages related to form validation or backend errors
   //View configuration states
   const [selectedConfig, setSelectedConfig] = useState(null); //stores the configuration data of the selected router for viewing
+  const [noConfigMessages, setNoConfigMessages] = useState({}); //stores messages for routers that have no configuration available
   //Fetch configuration loading states
   const [fetchingRouterId, setFetchingRouterId] = useState(null); //stores the ID of the router currently being fetched for configuration (used to show loading state)
   const [fetchMessages, setFetchMessages] = useState({}); //stores messages related to fetching configuration for each router (e.g. success or error messages)
@@ -172,12 +173,38 @@ const Dashboard = () => {
         }
       );
 
+      // Handle 404 specifically to show "no config" message
+      if (response.status === 404) {
+        setNoConfigMessages((prev) => ({
+          ...prev,
+          [routerId]: "No configuration yet. Please fetch to see configuration.",
+        }));
+
+        // Auto-remove message after 5 seconds
+        setTimeout(() => {
+          setNoConfigMessages((prev) => {
+            const updated = { ...prev }; // create a copy of the previous state
+            delete updated[routerId]; // remove the message for this specific router ID
+            return updated;
+          });
+        }, 5000);
+
+        return;
+      }
+
       if (!response.ok) {
         const errData = await response.json();
         throw new Error(errData.detail || "Failed to fetch latest configuration");
       }
 
       const data = await response.json();
+
+      // Clear any "no config" message for this router if config is successfully fetched
+      setNoConfigMessages((prev) => {
+        const updated = { ...prev };
+        delete updated[routerId];
+        return updated;
+      });
 
       // Set the selected config state for the modal
       setSelectedConfig({
@@ -519,6 +546,13 @@ const Dashboard = () => {
               {fetchMessages[router.id] && (
                 <p className="fetch-message">
                   {fetchMessages[router.id]}
+                </p>
+              )}
+              
+              {/* Display "no config" message for this router (if exists) */}
+              {noConfigMessages[router.id] && (
+                <p className="no-config-message">
+                  {noConfigMessages[router.id]}
                 </p>
               )}
             </div>
