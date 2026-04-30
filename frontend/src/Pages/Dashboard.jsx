@@ -831,8 +831,58 @@ const Dashboard = () => {
               Diff: Version {compareResult.version_1} vs {compareResult.version_2}
             </h2>
 
-            <div className="diff-box">
-              {compareResult.diff}
+            <div
+              className="diff-box"
+              style={{
+                fontFamily: "monospace",
+                whiteSpace: "pre-wrap",
+                maxHeight: "400px",
+                overflowY: "auto",
+                backgroundColor: "#0d1117",
+                padding: "10px",
+                borderRadius: "8px"
+              }}
+            >
+              {(() => {
+                const changes = [];
+                const diff = compareResult.diff;
+
+                for (let i = 0; i < diff.length; i++) {
+                  const current = diff[i];
+                  const next = diff[i + 1];
+
+                  // Pair: removed -> added (real change)
+                  if (current.type === "removed" && next?.type === "added") {
+                    changes.push(
+                      <div key={i} style={{ marginBottom: "6px" }}>
+                        <div style={{ color: "#f85149" }}>- {current.line}</div>
+                        <div style={{ color: "#2ea043" }}>+ {next.line}</div>
+                      </div>
+                    );
+                    i++; // skip next (already used)
+                  }
+
+                  // Only removed (deleted line)
+                  else if (current.type === "removed") {
+                    changes.push(
+                      <div key={i} style={{ color: "#f85149" }}>
+                        - {current.line}
+                      </div>
+                    );
+                  }
+
+                  // Only added (new line)
+                  else if (current.type === "added") {
+                    changes.push(
+                      <div key={i} style={{ color: "#2ea043" }}>
+                        + {current.line}
+                      </div>
+                    );
+                  }
+                }
+
+                return changes.length > 0 ? changes : <p>No differences found.</p>;
+              })()}
             </div>
 
             <button

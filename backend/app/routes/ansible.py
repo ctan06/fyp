@@ -1,3 +1,5 @@
+import codecs
+
 from database import routers_collection, router_configs_collection
 from fastapi import APIRouter, Depends, HTTPException, status
 from dependencies.auth import get_current_user
@@ -234,22 +236,27 @@ def compare_configs(
     v2: int,
     current_user=Depends(get_current_user)
 ):
+    # Validate ObjectId
     try:
         obj_id = ObjectId(router_id)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid router ID")
 
-    router = routers_collection.find_one({"_id": obj_id})
-    if not router:
+    # Get router
+    router_obj = routers_collection.find_one({"_id": obj_id})
+    if not router_obj:
         raise HTTPException(status_code=404, detail="Router not found")
 
-    config1 = router_configs_collection.find_one(
-        {"router_id": router_id, "version": v1}
-    )
+    # Get both configs
+    config1 = router_configs_collection.find_one({
+        "router_id": router_id,
+        "version": v1
+    })
 
-    config2 = router_configs_collection.find_one(
-        {"router_id": router_id, "version": v2}
-    )
+    config2 = router_configs_collection.find_one({
+        "router_id": router_id,
+        "version": v2
+    })
 
     if not config1 or not config2:
         raise HTTPException(
@@ -257,20 +264,59 @@ def compare_configs(
             detail="One or both versions not found"
         )
 
-    text1 = config1["config"].splitlines()
-    text2 = config2["config"].splitlines()
+    #  Decode configs (fix escaped \n issue)
+    config_str1 = codecs.decode(config1["config"], "unicode_escape")
+    config_str2 = codecs.decode(config2["config"], "unicode_escape")
 
-    diff = difflib.unified_diff(
-        text1,
-        text2,
-        fromfile=f"version_{v1}",
-        tofile=f"version_{v2}",
-        lineterm=""
-    )
+    # Split + clean lines
+    text1 = [
+        line.strip()
+        for line in config_str1.split("\n")
+        if line.strip() and line.strip() != "!"
+    ]
+
+    text2 = [
+        line.strip()
+        for line in config_str2.split("\n")
+        if line.strip() and line.strip() != "!"
+    ]
+
+    # Use SequenceMatcher for cleaner diff
+    matcher = difflib.SequenceMatcher(None, text1, text2)
+
+    formatted_diff = []
+
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == "replace":
+            for old, new in zip(text1[i1:i2], text2[j1:j2]):
+                formatted_diff.append({
+                    "type": "removed",
+                    "line": old
+                })
+                formatted_diff.append({
+                    "type": "added",
+                    "line": new
+                })
+
+        elif tag == "delete":
+            for old in text1[i1:i2]:
+                formatted_diff.append({
+                    "type": "removed",
+                    "line": old
+                })
+
+        elif tag == "insert":
+            for new in text2[j1:j2]:
+                formatted_diff.append({
+                    "type": "added",
+                    "line": new
+                })
+
+        # ignore "equal" → removes unchanged lines
 
     return {
         "router_id": router_id,
         "version_1": v1,
         "version_2": v2,
-        "diff": "\n".join(diff)
+        "diff": formatted_diff
     }
