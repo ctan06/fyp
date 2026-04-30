@@ -21,6 +21,10 @@ const Dashboard = () => {
   const [historyConfigs, setHistoryConfigs] = useState([]); // stores all configs for selected router
   const [loadingHistoryRouterId, setLoadingHistoryRouterId] = useState(null); // loading state for history fetch
   const [selectedHistoryConfig, setSelectedHistoryConfig] = useState(null); // stores selected config from history to view in modal
+  const [compareV1, setCompareV1] = useState("");
+  const [compareV2, setCompareV2] = useState("");
+  const [compareResult, setCompareResult] = useState(null);
+  const [compareLoading, setCompareLoading] = useState(false);
   // Edit router states
   const [showEditForm, setShowEditForm] = useState(false); // controls edit form visibility
   const [editRouterId, setEditRouterId] = useState(null); // stores the ID of the router being edited
@@ -349,7 +353,13 @@ const Dashboard = () => {
       if (!res.ok) throw new Error("Failed to fetch router history");
 
       const configs = await res.json();
-      setHistoryConfigs(configs);
+
+      setHistoryConfigs(
+        configs.map(cfg => ({
+          ...cfg,
+          router_id: routerId
+        }))
+      );
 
     } catch (err) {
       console.error(err);
@@ -387,6 +397,45 @@ const Dashboard = () => {
     } catch (err) {
       console.error(err);
       setError(err.message);
+    }
+  };
+
+  const handleCompareConfigs = async (routerId) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      if (!compareV1 || !compareV2) {
+        setError("Please enter both version numbers.");
+        return;
+      }
+
+      setCompareLoading(true);
+      setError("");
+
+      const res = await fetch(
+        `http://localhost:8000/ansible/router/${routerId}/compare?v1=${compareV1}&v2=${compareV2}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || "Comparison failed");
+      }
+
+      const data = await res.json();
+
+      setCompareResult(data);
+
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setCompareLoading(false);
     }
   };
 
@@ -548,7 +597,7 @@ const Dashboard = () => {
                   {fetchMessages[router.id]}
                 </p>
               )}
-              
+
               {/* Display "no config" message for this router (if exists) */}
               {noConfigMessages[router.id] && (
                 <p className="no-config-message">
@@ -698,6 +747,40 @@ const Dashboard = () => {
                 ))}
               </div>
             )}
+
+            {historyConfigs.length >= 2 && (
+              <div className="compare-section">
+                <h2>Compare Versions</h2>
+
+                <div className = "compare-row">
+                  <div className="compare-inputs">
+                    <input
+                      type="number"
+                      placeholder="Version #1"
+                      value={compareV1}
+                      onChange={(e) => setCompareV1(e.target.value)}
+                      className="compare-input"
+                    />
+
+                    <input
+                      type="number"
+                      placeholder="Version #2"
+                      value={compareV2}
+                      onChange={(e) => setCompareV2(e.target.value)}
+                      className="compare-input"
+                    />
+                  </div>
+
+                  <button
+                    className="compare-btn"
+                    onClick={() => handleCompareConfigs(historyConfigs[0].router_id)}
+                    disabled={compareLoading}
+                  >
+                    {compareLoading ? "Comparing..." : "Compare"}
+                  </button>
+                </div>
+              </div>
+            )}
             <button
               className="history-close-btn"
               onClick={() => setShowHistoryModal(false)}
@@ -737,6 +820,27 @@ const Dashboard = () => {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {compareResult && (
+        <div className="modal-overlay">
+          <div className="modal compare-modal">
+            <h2>
+              Diff: Version {compareResult.version_1} vs {compareResult.version_2}
+            </h2>
+
+            <div className="diff-box">
+              {compareResult.diff}
+            </div>
+
+            <button
+              className="history-close-btn"
+              onClick={() => setCompareResult(null)}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
