@@ -2,7 +2,47 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "./SignUp.css";
 
+
 const SignUp = () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // prevents page refresh
+
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+
+    // simple check
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:8000/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.detail || "Error creating account");
+        return;
+      }
+
+      alert("Account created successfully!");
+    } catch (error) {
+      alert("Server error");
+      console.error(error);
+    }
+  };
+
   return (
     <div className="signup-container">
       <div className="signup-flex">
@@ -26,7 +66,7 @@ const SignUp = () => {
           </div>
 
           {/* Form */}
-          <form className="signup-form">
+          <form className="signup-form" onSubmit={handleSubmit}>
             <label htmlFor="fullname">Full Name</label>
             <input type="text" id="fullname" placeholder="Enter your full name" required />
 

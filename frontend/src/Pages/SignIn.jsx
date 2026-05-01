@@ -65,7 +65,10 @@ const handleSubmit = async (e) => {
 
         We pass the token to App.jsx via onLogin(token)
       */
-      onLogin(data.access_token);
+      onLogin({
+        token: data.access_token,
+        user: data.user
+      });
 
       // Redirect authenticated user to dashboard
       navigate("/dashboard");

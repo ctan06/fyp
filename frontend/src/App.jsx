@@ -22,11 +22,18 @@ const App = () => {
     Boolean(localStorage.getItem("token"))
   );
 
+  const [user, setUser] = useState(
+    JSON.parse(localStorage.getItem("user")) || null
+  );
+
   /// Called after the backend successfully authenticates the user.
   // Stores the JWT token and updates authentication state.
-  const login = (token) => {
-    localStorage.setItem("token", token);
+  const login = (data) => {
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+
     setIsAuthenticated(true);
+    setUser(data.user);
   };
 
   /// Logs the user out by removing the JWT token.
