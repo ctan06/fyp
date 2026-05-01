@@ -431,6 +431,9 @@ const Dashboard = () => {
 
       setCompareResult(data);
 
+      setCompareV1("");
+      setCompareV2("");
+
     } catch (err) {
       console.error(err);
       setError(err.message);
