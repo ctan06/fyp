@@ -8,16 +8,19 @@ class Router:
         self,
         name: str,
         ip: str,
+        user_id: str, 
         created_at: datetime | None = None,
     ):
         self.name = name
         self.ip = ip
+        self.user_id = user_id 
         self.created_at = created_at or datetime.now(timezone.utc)
 
     def to_dict(self):
         return {
             "name": self.name,
             "ip": self.ip,
+            "user_id": self.user_id,
             "created_at": self.created_at,
         }
     

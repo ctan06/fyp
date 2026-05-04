@@ -1,5 +1,4 @@
 import codecs
-
 from database import routers_collection, router_configs_collection
 from fastapi import APIRouter, Depends, HTTPException, status
 from dependencies.auth import get_current_user
@@ -9,7 +8,6 @@ import subprocess
 import difflib
 import os
 
-
 router = APIRouter()
 
 ANSIBLE_DIR = "../ansible"
@@ -18,8 +16,9 @@ INVENTORY_FILE = os.path.join(ANSIBLE_DIR, "inventory.ini")
 
 @router.post("/fetch-all-configs")
 def fetch_all_configs(current_user=Depends(get_current_user)):
-
-    routers = list(routers_collection.find())
+    routers = list(routers_collection.find({
+        "user_id": current_user["id"] 
+    }))
 
     updated = []
     skipped = []
@@ -28,7 +27,7 @@ def fetch_all_configs(current_user=Depends(get_current_user)):
     for router_obj in routers:
         router_id = str(router_obj["_id"])
         router_name = router_obj["name"]
-
+       
         try:
             result = subprocess.run(
                 [
@@ -80,7 +79,6 @@ def fetch_all_configs(current_user=Depends(get_current_user)):
         "failed": failed,
     }
 
-
 @router.post("/fetch-config/{router_id}")
 def fetch_router_config(router_id: str, current_user=Depends(get_current_user)):
     """
@@ -94,18 +92,31 @@ def fetch_router_config(router_id: str, current_user=Depends(get_current_user)):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid router ID")
 
-    router_obj = routers_collection.find_one({"_id": obj_id})
+    router_obj = routers_collection.find_one({
+        "_id": obj_id,
+        "user_id": current_user["id"] 
+    })
     if not router_obj:
         raise HTTPException(status_code=404, detail="Router not found")
 
     # Run Ansible playbook for this router only
+    router_name = router_obj["name"]
+
     try:
         result = subprocess.run(
-            ["ansible-playbook", PLAYBOOK_FILE, "-i", INVENTORY_FILE, "--limit", router_obj["name"]],
+            [
+                "ansible-playbook",
+                PLAYBOOK_FILE,
+                "-i",
+                INVENTORY_FILE,
+                "--limit",
+                router_name
+            ],
             capture_output=True,
             text=True,
             check=True
         )
+
     except subprocess.CalledProcessError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -149,7 +160,6 @@ def fetch_router_config(router_id: str, current_user=Depends(get_current_user)):
         "data": router_config.to_response(insert_result.inserted_id)
     }
 
-
 @router.get("/view-config/{config_id}")
 def view_config(config_id: str, current_user=Depends(get_current_user)):
     try:
@@ -158,6 +168,17 @@ def view_config(config_id: str, current_user=Depends(get_current_user)):
         raise HTTPException(status_code=400, detail="Invalid config ID")
 
     config_doc = router_configs_collection.find_one({"_id": obj_id})
+
+    if not config_doc:
+        raise HTTPException(status_code=404, detail="Configuration not found")
+
+    router_obj = routers_collection.find_one({
+        "_id": ObjectId(config_doc["router_id"]),
+        "user_id": current_user["id"]
+    })
+
+    if not router_obj:
+        raise HTTPException(status_code=403, detail="Unauthorized access")
     if not config_doc:
         raise HTTPException(status_code=404, detail="Configuration not found")
 
@@ -172,7 +193,6 @@ def view_config(config_id: str, current_user=Depends(get_current_user)):
 
     return router_config.to_response(config_doc["_id"])
 
-
 @router.get("/router/{router_id}/latest-config")
 def get_latest_config(router_id: str, current_user=Depends(get_current_user)):
 
@@ -181,7 +201,10 @@ def get_latest_config(router_id: str, current_user=Depends(get_current_user)):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid router ID")
 
-    router = routers_collection.find_one({"_id": obj_id})
+    router = routers_collection.find_one({
+        "_id": obj_id,
+        "user_id": current_user["id"]
+    })
     if not router:
         raise HTTPException(status_code=404, detail="Router not found")
 
@@ -209,7 +232,10 @@ def list_router_configs(router_id: str, current_user=Depends(get_current_user)):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid router ID")
 
-    router = routers_collection.find_one({"_id": obj_id})
+    router = routers_collection.find_one({
+        "_id": obj_id,
+        "user_id": current_user["id"]
+    })
     if not router:
         raise HTTPException(status_code=404, detail="Router not found")
 
@@ -243,7 +269,10 @@ def compare_configs(
         raise HTTPException(status_code=400, detail="Invalid router ID")
 
     # Get router
-    router_obj = routers_collection.find_one({"_id": obj_id})
+    router_obj = routers_collection.find_one({
+        "_id": obj_id,
+        "user_id": current_user["id"]
+    })
     if not router_obj:
         raise HTTPException(status_code=404, detail="Router not found")
 

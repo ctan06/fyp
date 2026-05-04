@@ -10,7 +10,6 @@ class RouterCreate(BaseModel):
     def ip_to_str(cls, v):
         return str(v)
 
-
 class RouterOut(BaseModel):
     id: str 
     name: str

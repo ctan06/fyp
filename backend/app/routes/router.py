@@ -16,13 +16,14 @@ def get_all_routers(current_user=Depends(get_current_user)):
     Returns a list of routers with their id, name, IP, and created_at.
     Only authenticated users can access.
     """
-    routers_cursor = routers_collection.find()
+    routers_cursor = routers_collection.find({"user_id": current_user["id"]})
     routers_list = []
 
     for r in routers_cursor:
         router_obj = Router(
             name=r["name"],
             ip=r["ip"],
+            user_id=r["user_id"],
             created_at=r.get("created_at")
         )
         routers_list.append(router_obj.to_response(r["_id"]))
@@ -39,7 +40,8 @@ def add_router(router_data: RouterCreate, current_user=Depends(get_current_user)
     # Create Router object
     new_router = Router(
         name=router_data.name,
-        ip=str(router_data.ip) # converted to string to match mongodb
+        ip=str(router_data.ip), # converted to string to match mongodb
+        user_id=current_user["id"]
     )
 
     try:
@@ -49,7 +51,10 @@ def add_router(router_data: RouterCreate, current_user=Depends(get_current_user)
     except Exception as e:
         raise HTTPException(500, f"Error: {str(e)}")
 
-    update_inventory_file()
+    try:
+        update_inventory_file()
+    except Exception as e:
+        raise HTTPException(500, f"Inventory update failed: {str(e)}")
 
     return new_router.to_response(result.inserted_id) 
 
@@ -66,12 +71,18 @@ def delete_router(router_id: str, current_user=Depends(get_current_user)):
         raise HTTPException(status_code=400, detail="Invalid router ID")
 
     # Attempt deletion
-    result = routers_collection.delete_one({"_id": obj_id})
+    result = routers_collection.delete_one({
+        "_id": obj_id,
+        "user_id": current_user["id"]
+    })
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Router not found")
 
     # Update the inventory file
-    update_inventory_file()
+    try:
+        update_inventory_file()
+    except Exception as e:
+        raise HTTPException(500, f"Inventory update failed: {str(e)}")
 
     return {"message": f"Router {router_id} deleted successfully"}
 
@@ -94,15 +105,24 @@ def update_router(router_id: str, router_data: RouterCreate, current_user=Depend
     }
 
     # Attempt update
-    result = routers_collection.update_one({"_id": obj_id}, {"$set": update_doc})
+    result = routers_collection.update_one({
+        "_id": obj_id,  
+        "user_id": current_user["id"]
+    }, {"$set": update_doc})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Router not found")
 
     # Update the inventory file
-    update_inventory_file()
+    try:
+        update_inventory_file()
+    except Exception as e:
+        raise HTTPException(500, f"Inventory update failed: {str(e)}")
 
     # Return updated router info
-    updated_router = routers_collection.find_one({"_id": obj_id})
+    updated_router = routers_collection.find_one({
+        "_id": obj_id,
+        "user_id": current_user["id"] 
+    })
     return Router(
         name=updated_router["name"],
         ip=updated_router["ip"],
