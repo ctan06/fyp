@@ -10,7 +10,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail="Session expired. Please log in again",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
@@ -27,7 +27,11 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
             raise credentials_exception
 
     except JWTError:
-        raise credentials_exception
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session expired or invalid token. Please log in again",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     user = users_collection.find_one({"_id": obj_id})
 
