@@ -10,7 +10,6 @@ from database import routers_collection
 router = APIRouter() 
 
 ANSIBLE_DIR = "../ansible" 
-
 FETCH_STRUCTURED_PLAYBOOK = os.path.join(ANSIBLE_DIR, "fetch_structured.yaml") 
 APPLY_PLAYBOOK = os.path.join(ANSIBLE_DIR, "apply_config.yaml") 
 INVENTORY_FILE = os.path.join(ANSIBLE_DIR, "inventory.ini")
@@ -99,3 +98,50 @@ def get_structured_config(router_id: str, current_user=Depends(get_current_user)
             status_code=500,
             detail=f"Failed to fetch structured config: {e.stderr}"
         )
+
+@router.post("/router/{router_id}/apply-config")
+def apply_config(router_id: str, payload: dict):
+
+    # Validate router
+    try:
+        obj_id = ObjectId(router_id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid router ID")
+
+    router_obj = routers_collection.find_one({"_id": obj_id})
+
+    if not router_obj:
+        raise HTTPException(status_code=404, detail="Router not found")
+
+    router_name = router_obj["name"]
+
+    # APPLY CONFIG 
+    try:
+        subprocess.run(
+            [
+                "ansible-playbook",
+                APPLY_PLAYBOOK,
+                "-i",
+                INVENTORY_FILE,
+                "--limit",
+                router_name,
+                "--extra-vars",
+                json.dumps(payload)
+            ],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+
+    except subprocess.CalledProcessError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to apply config:\nSTDOUT:\n{e.stdout}\nSTDERR:\n{e.stderr}"
+        )
+
+    # RESPONSE 
+    return {
+        "status": "success",
+        "message": "Configuration applied successfully",
+        "router_id": router_id
+    }

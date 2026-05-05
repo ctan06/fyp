@@ -21,8 +21,6 @@
         structured_config:
           hostname: "{{ hostname.stdout[0] }}"
           interfaces: "{{ interfaces.stdout[0] }}"
-          snmp:
-            enabled: false
 
     - name: Output JSON only
       debug:
