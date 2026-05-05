@@ -1,0 +1,13 @@
+- name: Set hostname
+  ios_config:
+    lines:
+      - hostname {{ hostname }}
+  when: hostname is defined
+
+- name: Configure interfaces
+  ios_config:
+    lines:
+      - interface {{ item.name }}
+      - ip address {{ item.ip }} {{ item.mask }}
+  loop: "{{ interfaces }}"
+  when: interfaces is defined

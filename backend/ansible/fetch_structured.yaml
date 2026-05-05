@@ -1,0 +1,29 @@
+- name: Fetch structured config
+  hosts: cisco_routers
+  gather_facts: no
+
+  tasks:
+
+    - name: Get hostname
+      ios_command:
+        commands:
+          - show running-config | include hostname
+      register: hostname
+
+    - name: Get interfaces
+      ios_command:
+        commands:
+          - show ip interface brief
+      register: interfaces
+
+    - name: Build structured output
+      set_fact:
+        structured_config:
+          hostname: "{{ hostname.stdout[0] }}"
+          interfaces: "{{ interfaces.stdout[0] }}"
+          snmp:
+            enabled: false
+
+    - name: Output JSON only
+      debug:
+        msg: "{{ structured_config | to_json }}"

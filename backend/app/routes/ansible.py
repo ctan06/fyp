@@ -79,7 +79,7 @@ def fetch_all_configs(current_user=Depends(get_current_user)):
         "failed": failed,
     }
 
-@router.post("/fetch-config/{router_id}")
+@router.get("/fetch-config/{router_id}")
 def fetch_router_config(router_id: str, current_user=Depends(get_current_user)):
     """
     Fetch the running config of a specific router using Ansible.

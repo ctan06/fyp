@@ -1,5 +1,4 @@
 from core.logging import setup_logging
-
 setup_logging()  # MUST be first
 
 import time
@@ -10,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routes import ansible
 from routes import auth
 from routes import router as router_routes
+from routes import router_configs
 
 app = FastAPI()
 
@@ -42,4 +42,5 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(ansible.router, prefix="/ansible", tags=["Ansible"])
+app.include_router(router_configs.router, prefix="/router-configs", tags=["Router Configurations"])
 app.include_router(router_routes.router, prefix="/routers", tags=["Routers"])

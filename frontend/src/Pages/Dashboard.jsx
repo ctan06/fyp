@@ -239,7 +239,6 @@ const Dashboard = () => {
       const response = await fetch(
         `http://localhost:8000/ansible/fetch-config/${routerId}`,
         {
-          method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`, // JWT included for authentication
