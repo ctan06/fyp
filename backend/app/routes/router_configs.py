@@ -100,7 +100,7 @@ def get_structured_config(router_id: str, current_user=Depends(get_current_user)
         )
 
 @router.post("/router/{router_id}/apply-config")
-def apply_config(router_id: str, payload: dict):
+def apply_config(router_id: str, payload: dict, current_user=Depends(get_current_user)):
 
     # Validate router
     try:
@@ -108,7 +108,10 @@ def apply_config(router_id: str, payload: dict):
     except:
         raise HTTPException(status_code=400, detail="Invalid router ID")
 
-    router_obj = routers_collection.find_one({"_id": obj_id})
+    router_obj = routers_collection.find_one({
+        "_id": obj_id, 
+        "user_id": current_user["id"]
+    })
 
     if not router_obj:
         raise HTTPException(status_code=404, detail="Router not found")
