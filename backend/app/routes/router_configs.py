@@ -15,7 +15,7 @@ APPLY_PLAYBOOK = os.path.join(ANSIBLE_DIR, "apply_config.yaml")
 INVENTORY_FILE = os.path.join(ANSIBLE_DIR, "inventory.ini")
 
 @router.get("/router/{router_id}/structured-config")
-def get_structured_config(router_id: str):
+def get_structured_config(router_id: str, current_user=Depends(get_current_user)):
 
     # Validate router ID
     try:
@@ -25,7 +25,7 @@ def get_structured_config(router_id: str):
 
     router_obj = routers_collection.find_one({
         "_id": obj_id,
-        #"user_id": current_user["id"]
+        "user_id": current_user["id"]
     })
 
     if not router_obj:
