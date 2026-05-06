@@ -31,7 +31,12 @@ const Dashboard = () => {
   const [editRouterName, setEditRouterName] = useState(""); // stores the new name for the router being edited
   const [editRouterIP, setEditRouterIP] = useState(""); // stores the new IP for the router being edited
   const [editLoading, setEditLoading] = useState(false); // stores the loading state for the edit operation
-
+  // Manage config states
+  const [manageConfigData, setManageConfigData] = useState(null); // stores the configuration data for the router being managed
+  const [showManageModal, setShowManageModal] = useState(false); // controls manage config modal visibility
+  const [loadingManage, setLoadingManage] = useState(false); // stores the loading state for the manage config operation
+  const [managingRouterId, setManagingRouterId] = useState(null); // stores the ID of the router being managed
+  const [savingConfig, setSavingConfig] = useState(false); // stores the loading state for saving the managed configuration
   // Fetch routers from backend when Dashboard mounts
   useEffect(() => {
     const fetchRouters = async () => {
@@ -515,9 +520,105 @@ const Dashboard = () => {
     }
   };
 
+  // This function handles the "Manage Config" functionality.
+  const handleManageConfig = async (routerId) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      setManagingRouterId(routerId);
+      setLoadingManage(true);
+
+      const response = await fetch(
+        `http://localhost:8000/router-configs/router/${routerId}/structured-config`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.detail || "Failed to fetch structured config");
+      }
+
+      const data = await response.json();
+
+      // VERY IMPORTANT: store config only
+      setManageConfigData(data.config);
+
+      // open modal
+      setShowManageModal(true);
+
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setLoadingManage(false);
+      setManagingRouterId(null);
+    }
+  };
+
+  const handleSaveConfig = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token || !managingRouterId) return;
+
+      setSavingConfig(true);
+
+      // Build payload exactly as backend expects
+      const payload = {
+        hostname: manageConfigData.hostname,
+        interfaces: manageConfigData.interfaces.map((intf) => ({
+          name: intf.name,
+          ip: intf.ip,
+          mask: intf.mask,
+        })),
+      };
+
+      const response = await fetch(
+        `http://localhost:8000/router-configs/router/${managingRouterId}/apply-config`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.detail || "Failed to apply config");
+      }
+
+      const result = await response.json();
+
+      console.log("Config applied:", result);
+
+      // close modal on success
+      setShowManageModal(false);
+      setManageConfigData(null);
+      setManagingRouterId(null);
+
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setSavingConfig(false);
+    }
+  };
+
   return (
     <div className="dashboard-container">
       <h1>Network Dashboard</h1>
+
+          <div className="auto-fetch-banner">
+            We automatically fetch configurations every 30 minutes.  
+            If you want to fetch now, click the “Fetch All Configurations” button.
+          </div>
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
         <button
@@ -576,6 +677,14 @@ const Dashboard = () => {
                   disabled={loadingHistoryRouterId === router.id}
                 >
                   {loadingHistoryRouterId === router.id ? "Loading History..." : "View History"}
+                </button>
+
+                <button
+                  className="manage-config-btn"
+                  onClick={() => handleManageConfig(router.id)}
+                  disabled={managingRouterId === router.id}
+                >
+                  {managingRouterId === router.id ? "Loading..." : "Manage Config"}
                 </button>
 
                 <button
@@ -893,6 +1002,103 @@ const Dashboard = () => {
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {showManageModal && manageConfigData && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>Manage Configuration</h2>
+
+            {loadingManage ? (
+              <p>Loading...</p>
+            ) : (
+              <>
+                {/* HOSTNAME */}
+                <div className="manage-hostname">
+                  <h3>Hostname</h3>
+                  <input
+                    type="text"
+                    value={manageConfigData.hostname || ""}
+                    onChange={(e) =>
+                      setManageConfigData({
+                        ...manageConfigData,
+                        hostname: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                {/* INTERFACES */}
+                <div className="interface-block">
+                  <h3>Interfaces</h3>
+
+                  {manageConfigData.interfaces?.map((intf, index) => (
+                    <div key={index}>
+
+                    <div className="interface-header">
+                      <p>{intf.name}</p>
+
+                      <span className={`status-badge ${intf.status}`}>
+                        {intf.status}
+                      </span>
+                    </div>
+
+                      {/* IP */}
+                      <input
+                        type="text"
+                        placeholder="IP"
+                        value={intf.ip || ""}
+                        onChange={(e) => {
+                          const updated = [...manageConfigData.interfaces];
+                          updated[index].ip = e.target.value;
+
+                          setManageConfigData({
+                            ...manageConfigData,
+                            interfaces: updated,
+                          });
+                        }}
+                      />
+
+                      {/* SUBNET MASK (NEW) */}
+                      <input
+                        type="text"
+                        placeholder="Subnet Mask"
+                        value={intf.mask || ""}
+                        onChange={(e) => {
+                          const updated = [...manageConfigData.interfaces];
+                          updated[index].mask = e.target.value;
+
+                          setManageConfigData({
+                            ...manageConfigData,
+                            interfaces: updated,
+                          });
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <div className="modal-buttons">
+              <button
+                className="manage-save-btn"
+                onClick={handleSaveConfig}
+                disabled={savingConfig}
+              >
+                {savingConfig ? "Saving..." : "Save"}
+              </button>
+
+              <button
+                className="manage-close-button"
+                onClick={() => setShowManageModal(false)}
+              >
+                Close
+              </button>
+            </div>
+
           </div>
         </div>
       )}

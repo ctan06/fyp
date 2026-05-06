@@ -10,6 +10,16 @@ h1 {
   color: #0f006d;
 }
 
+.auto-fetch-banner {
+  background: #676767;
+  color: #e5e7eb;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 16px;
+  border-left: 4px solid #0f006d;
+}
+
 .add-router-btn {
   padding: 10px 18px;
   background-color: #0f006d;
@@ -426,4 +436,95 @@ h1 {
   overflow-y: auto;
   border-radius: 10px;
   border: 1px solid #374151;
+}
+
+.manage-config-btn {
+  background-color: #0f006d;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.manage-config-btn:hover {
+  background-color: #b7295a;
+}
+
+.manage-hostname {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.manage-hostname label {
+  font-weight: bold;
+}
+
+.manage-hostname input {
+  padding: 8px;
+  outline: none;
+}
+
+.interface-header {
+  display: flex;
+  justify-content: space-between; /* pushes them apart */
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.interface-header p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  width: fit-content;
+}
+
+/* UP = green */
+.status-badge.up {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+/* DOWN = red */
+.status-badge.down {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.manage-close-button {
+  align-self: flex-end;
+  background-color: #0f006d;
+  border: none;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.manage-close-button:hover {
+  background-color: #ff0000;
+}
+
+.manage-save-btn{
+  align-self: flex-end;
+  background-color: #0f006d;
+  border: none;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.manage-save-btn:hover {
+  background-color: #53d769;
 }
