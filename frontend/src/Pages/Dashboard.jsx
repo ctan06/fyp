@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Dashboard.css";
+import API_BASE from "../api";
 
 const Dashboard = () => {
   const [routers, setRouters] = useState([]); //stored routers currently displayed in UI
@@ -45,7 +46,7 @@ const Dashboard = () => {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        const response = await fetch("http://localhost:8000/routers/all", {
+        const response = await fetch(`${API_BASE}/routers/all`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -90,7 +91,7 @@ const Dashboard = () => {
 
     try {
       //fetch request to backend to add new router
-      const response = await fetch("http://localhost:8000/routers/add", {
+      const response = await fetch(`${API_BASE}/routers/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -134,7 +135,7 @@ const Dashboard = () => {
 
       //Send DELETE request to backend to delete the router with the specified ID.
       const response = await fetch(
-        `http://localhost:8000/routers/${routerId}`,
+        `${API_BASE}/routers/${routerId}`,
         {
           method: "DELETE",
           headers: {
@@ -172,7 +173,7 @@ const Dashboard = () => {
 
       // Fetch latest config from new backend route
       const response = await fetch(
-        `http://localhost:8000/ansible/router/${routerId}/latest-config`,
+        `${API_BASE}/ansible/router/${routerId}/latest-config`,
         {
           method: "GET",
           headers: {
@@ -242,7 +243,7 @@ const Dashboard = () => {
 
       //Send POST request to backend to fetch the latest configuration for the specified router ID.
       const response = await fetch(
-        `http://localhost:8000/ansible/fetch-config/${routerId}`,
+        `${API_BASE}/ansible/fetch-config/${routerId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -307,7 +308,7 @@ const Dashboard = () => {
 
       //Send POST request to backend to fetch latest configurations for all routers.
       const response = await fetch(
-        "http://localhost:8000/ansible/fetch-all-configs",
+        `${API_BASE}/ansible/fetch-all-configs`,
         {
           method: "POST",
           headers: {
@@ -348,7 +349,7 @@ const Dashboard = () => {
       setShowHistoryModal(true);
 
       const res = await fetch(
-        `http://localhost:8000/ansible/router/${routerId}/configs`,
+        `${API_BASE}/ansible/router/${routerId}/configs`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -380,7 +381,7 @@ const Dashboard = () => {
       if (!token) return;
 
       const res = await fetch(
-        `http://localhost:8000/ansible/view-config/${configId}`,
+        `${API_BASE}/ansible/view-config/${configId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -418,7 +419,7 @@ const Dashboard = () => {
       setError("");
 
       const res = await fetch(
-        `http://localhost:8000/ansible/router/${routerId}/compare?v1=${compareV1}&v2=${compareV2}`,
+        `${API_BASE}/ansible/router/${routerId}/compare?v1=${compareV1}&v2=${compareV2}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -477,7 +478,7 @@ const Dashboard = () => {
       const token = localStorage.getItem("token"); //get JWT token for authentication
 
       const response = await fetch(
-        `http://localhost:8000/routers/${editRouterId}`, //send PATCH request to update the router with the specified ID
+        `${API_BASE}/routers/${editRouterId}`, //send PATCH request to update the router with the specified ID
         {
           method: "PATCH",
           headers: {
@@ -530,7 +531,7 @@ const Dashboard = () => {
       setLoadingManage(true);
 
       const response = await fetch(
-        `http://localhost:8000/router-configs/router/${routerId}/structured-config`,
+        `${API_BASE}/router-configs/router/${routerId}/structured-config`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -578,7 +579,7 @@ const Dashboard = () => {
       };
 
       const response = await fetch(
-        `http://localhost:8000/router-configs/router/${managingRouterId}/apply-config`,
+        `${API_BASE}/router-configs/router/${managingRouterId}/apply-config`,
         {
           method: "POST",
           headers: {
