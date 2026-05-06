@@ -6,14 +6,38 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
+from apscheduler.schedulers.background import BackgroundScheduler
+from contextlib import asynccontextmanager
+from jobs import scheduled_fetch_all_configs
+
 from routes import ansible
 from routes import auth
 from routes import router as router_routes
 from routes import router_configs
 
-app = FastAPI()
-
 logger = logging.getLogger("api.requests")
+scheduler_logger = logging.getLogger("api.scheduler")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(
+        scheduled_fetch_all_configs,
+        "interval",
+        minutes=30,
+        id="fetch_all_configs"
+    )
+    scheduler.start()
+    scheduler_logger.info("Scheduler started.")
+
+    yield  # app runs here
+
+    # Shutdown
+    scheduler.shutdown()
+    scheduler_logger.info("Scheduler stopped.")
+
+app = FastAPI(lifespan=lifespan)
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):

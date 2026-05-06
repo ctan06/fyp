@@ -7,7 +7,7 @@ def connect_mongo(uri=MONGO_URI, db_name="FYP"):
     Returns (None, None) if connection fails.
     """
     try:
-        client = MongoClient(uri, serverSelectionTimeoutMS=5000)
+        client = MongoClient(uri, serverSelectionTimeoutMS=10000)
         client.server_info()
         db = client[db_name]
         print(f"Connected to MongoDB database: {db_name}")
