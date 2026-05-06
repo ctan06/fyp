@@ -10,17 +10,24 @@
           - show running-config | include hostname
       register: hostname
 
-    - name: Get interfaces
+    - name: Get interfaces brief
       ios_command:
         commands:
           - show ip interface brief
-      register: interfaces
+      register: interfaces_brief
+
+    - name: Get full interface config
+      ios_command:
+        commands:
+          - show running-config | section interface
+      register: interfaces_config
 
     - name: Build structured output
       set_fact:
         structured_config:
           hostname: "{{ hostname.stdout[0] }}"
-          interfaces: "{{ interfaces.stdout[0] }}"
+          interfaces_brief: "{{ interfaces_brief.stdout[0] }}"
+          interfaces_config: "{{ interfaces_config.stdout[0] }}"
 
     - name: Output JSON only
       debug:

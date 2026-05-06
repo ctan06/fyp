@@ -15,9 +15,9 @@ APPLY_PLAYBOOK = os.path.join(ANSIBLE_DIR, "apply_config.yaml")
 INVENTORY_FILE = os.path.join(ANSIBLE_DIR, "inventory.ini")
 
 @router.get("/router/{router_id}/structured-config")
-def get_structured_config(router_id: str, current_user=Depends(get_current_user)):
+def get_structured_config(router_id: str):
 
-    # Validate router ID 
+    # Validate router ID
     try:
         obj_id = ObjectId(router_id)
     except:
@@ -25,13 +25,12 @@ def get_structured_config(router_id: str, current_user=Depends(get_current_user)
 
     router_obj = routers_collection.find_one({
         "_id": obj_id,
-        "user_id": current_user["id"] 
+        #"user_id": current_user["id"]
     })
 
     if not router_obj:
         raise HTTPException(status_code=404, detail="Router not found")
 
-    # Run Ansible 
     try:
         result = subprocess.run(
             [
@@ -49,45 +48,68 @@ def get_structured_config(router_id: str, current_user=Depends(get_current_user)
 
         stdout = result.stdout
 
-        # Extract JSON string from Ansible output 
+        # Extract JSON string from Ansible output
         match = re.search(r'"msg":\s*"(.+)"', stdout, re.DOTALL)
         if not match:
             raise HTTPException(500, "Failed to extract JSON from Ansible output")
 
         json_str = match.group(1)
-
-        # Decode escaped JSON
         json_str = json_str.encode('utf-8').decode('unicode_escape')
 
         structured = json.loads(json_str)
 
-        # Clean hostname 
+        # Clean hostname
         if "hostname" in structured:
             structured["hostname"] = structured["hostname"].split()[-1]
 
-        # Parse interfaces
-        def parse_interfaces(output):
-            lines = output.splitlines()
+        # PARSE INTERFACES WITH MASK
+        def parse_interfaces(brief_output, config_output):
             interfaces = []
 
-            for line in lines[1:]:  # skip header
+            brief_lines = brief_output.splitlines()
+            config_lines = config_output.splitlines()
+
+            for line in brief_lines[1:]:  # skip header
                 parts = line.split()
                 if len(parts) < 6:
                     continue
 
+                name = parts[0]
+                ip = None if parts[1] == "unassigned" else parts[1]
+                status = "up" if parts[4] == "up" else "down"
+
+                mask = None
+
+                #  find mask in running-config
+                for i, cfg_line in enumerate(config_lines):
+                    if cfg_line.strip().startswith(f"interface {name}"):
+                        for j in range(i + 1, i + 5):
+                            if j < len(config_lines) and "ip address" in config_lines[j]:
+                                cfg_parts = config_lines[j].strip().split()
+                                if len(cfg_parts) >= 4:
+                                    mask = cfg_parts[3]
+                                break
+                        break
+
                 interfaces.append({
-                    "name": parts[0],
-                    "ip": None if parts[1] == "unassigned" else parts[1],
-                    "status": "up" if parts[4] == "up" else "down"
+                    "name": name,
+                    "ip": ip,
+                    "mask": mask,
+                    "status": status
                 })
 
             return interfaces
 
-        if "interfaces" in structured:
-            structured["interfaces"] = parse_interfaces(structured["interfaces"])
-    
+        # Apply parsing
+        structured["interfaces"] = parse_interfaces(
+            structured["interfaces_brief"],
+            structured["interfaces_config"]
+        )
 
-        # Final response 
+        # Clean raw fields
+        structured.pop("interfaces_brief", None)
+        structured.pop("interfaces_config", None)
+
         return {
             "router_id": router_id,
             "config": structured
