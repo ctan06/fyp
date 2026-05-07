@@ -528,3 +528,11 @@ h1 {
 .manage-save-btn:hover {
   background-color: #53d769;
 }
+
+.manage-message {
+  margin-top: 5px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #0f006d;
+  margin-bottom: 15px;
+}

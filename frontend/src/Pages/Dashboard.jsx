@@ -1082,6 +1082,8 @@ const Dashboard = () => {
               </>
             )}
 
+            <h4 className = "manage-message">After saving, fetch configuration again to view changes.</h4>
+
             <div className="modal-buttons">
               <button
                 className="manage-save-btn"
