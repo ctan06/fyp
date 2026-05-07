@@ -557,7 +557,6 @@ const Dashboard = () => {
       setError(err.message);
     } finally {
       setLoadingManage(false);
-      setManagingRouterId(null);
     }
   };
 
