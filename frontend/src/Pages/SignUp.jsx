@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import API_BASE from "../api";
 import "./SignUp.css";
 
 
@@ -18,7 +19,7 @@ const SignUp = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:8000/auth/register", {
+      const response = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

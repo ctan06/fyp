@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API_BASE from "../api";
 import "./SignIn.css";
 
 /*
@@ -37,7 +38,7 @@ const handleSubmit = async (e) => {
 
     try {
       // Send login request to FastAPI backend
-      const response = await fetch("http://localhost:8000/auth/login", {
+      const response = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
