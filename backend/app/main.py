@@ -58,7 +58,7 @@ async def log_requests(request: Request, call_next):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://fyp-ecb8jyugn-jadradwan667-8547s-projects.vercel.app"],
+    allow_origins=["http://localhost:5173", "https://fyp-kappa-woad.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
