@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import API_BASE from "../api";
+import API_BASE, {fetchWithNgrok} from "../api";
 import "./SignUp.css";
 
 
