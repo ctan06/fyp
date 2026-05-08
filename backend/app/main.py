@@ -39,6 +39,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "https://fyp-kappa-woad.vercel.app"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start = time.time()
@@ -55,14 +63,6 @@ async def log_requests(request: Request, call_next):
     )
 
     return response
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://fyp-kappa-woad.vercel.app"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(ansible.router, prefix="/ansible", tags=["Ansible"])
