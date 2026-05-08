@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./Dashboard.css";
-import API_BASE from "../api";
+import API_BASE, {fetchWithNgrok} from "../api";
+
 
 const Dashboard = () => {
   const [routers, setRouters] = useState([]); //stored routers currently displayed in UI
@@ -46,7 +47,7 @@ const Dashboard = () => {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        const response = await fetch(`${API_BASE}/routers/all`, {
+        const response = await fetchWithNgrok(`${API_BASE}/routers/all`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -91,7 +92,7 @@ const Dashboard = () => {
 
     try {
       //fetch request to backend to add new router
-      const response = await fetch(`${API_BASE}/routers/add`, {
+      const response = await fetchWithNgrok(`${API_BASE}/routers/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -134,7 +135,7 @@ const Dashboard = () => {
       if (!token) return;
 
       //Send DELETE request to backend to delete the router with the specified ID.
-      const response = await fetch(
+      const response = await fetchWithNgrok(
         `${API_BASE}/routers/${routerId}`,
         {
           method: "DELETE",
@@ -172,7 +173,7 @@ const Dashboard = () => {
       setError("");
 
       // Fetch latest config from new backend route
-      const response = await fetch(
+      const response = await fetchWithNgrok(
         `${API_BASE}/ansible/router/${routerId}/latest-config`,
         {
           method: "GET",
@@ -242,7 +243,7 @@ const Dashboard = () => {
       setError("");
 
       //Send POST request to backend to fetch the latest configuration for the specified router ID.
-      const response = await fetch(
+      const response = await fetchWithNgrok(
         `${API_BASE}/ansible/fetch-config/${routerId}`,
         {
           headers: {
@@ -307,7 +308,7 @@ const Dashboard = () => {
       setError("");
 
       //Send POST request to backend to fetch latest configurations for all routers.
-      const response = await fetch(
+      const response = await fetchWithNgrok(
         `${API_BASE}/ansible/fetch-all-configs`,
         {
           method: "POST",
@@ -348,7 +349,7 @@ const Dashboard = () => {
       setLoadingHistoryRouterId(routerId);
       setShowHistoryModal(true);
 
-      const res = await fetch(
+      const res = await fetchWithNgrok(
         `${API_BASE}/ansible/router/${routerId}/configs`,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -380,7 +381,7 @@ const Dashboard = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const res = await fetch(
+      const res = await fetchWithNgrok(
         `${API_BASE}/ansible/view-config/${configId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -418,7 +419,7 @@ const Dashboard = () => {
       setCompareLoading(true);
       setError("");
 
-      const res = await fetch(
+      const res = await fetchWithNgrok(
         `${API_BASE}/ansible/router/${routerId}/compare?v1=${compareV1}&v2=${compareV2}`,
         {
           headers: {
@@ -477,7 +478,7 @@ const Dashboard = () => {
 
       const token = localStorage.getItem("token"); //get JWT token for authentication
 
-      const response = await fetch(
+      const response = await fetchWithNgrok(
         `${API_BASE}/routers/${editRouterId}`, //send PATCH request to update the router with the specified ID
         {
           method: "PATCH",
@@ -530,7 +531,7 @@ const Dashboard = () => {
       setManagingRouterId(routerId);
       setLoadingManage(true);
 
-      const response = await fetch(
+      const response = await fetchWithNgrok(
         `${API_BASE}/router-configs/router/${routerId}/structured-config`,
         {
           headers: {
@@ -577,7 +578,7 @@ const Dashboard = () => {
         })),
       };
 
-      const response = await fetch(
+      const response = await fetchWithNgrok(
         `${API_BASE}/router-configs/router/${managingRouterId}/apply-config`,
         {
           method: "POST",

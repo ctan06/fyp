@@ -38,7 +38,7 @@ const handleSubmit = async (e) => {
 
     try {
       // Send login request to FastAPI backend
-      const response = await fetch(`${API_BASE}/auth/login`, {
+      const response = await fetchWithNgrok(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

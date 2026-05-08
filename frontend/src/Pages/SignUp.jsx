@@ -19,7 +19,7 @@ const SignUp = () => {
     }
 
     try {
-      const response = await fetch(`${API_BASE}/auth/register`, {
+      const response = await fetchWithNgrok(`${API_BASE}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
