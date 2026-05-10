@@ -1,0 +1,12 @@
+- name: Execute command on router
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Run command
+      ios_config:
+        lines: "{{ command }}"
+      register: result
+
+    - name: Show result
+      debug:
+        msg: "Command executed successfully on {{ inventory_hostname }}"

@@ -4,6 +4,8 @@ import subprocess
 import os 
 import json 
 import re
+
+from pydantic import BaseModel
 from dependencies.auth import get_current_user 
 from database import routers_collection
 
@@ -12,7 +14,11 @@ router = APIRouter()
 ANSIBLE_DIR = "../ansible" 
 FETCH_STRUCTURED_PLAYBOOK = os.path.join(ANSIBLE_DIR, "fetch_structured.yaml") 
 APPLY_PLAYBOOK = os.path.join(ANSIBLE_DIR, "apply_config.yaml") 
+EXECUTE_PLAYBOOK = os.path.join(ANSIBLE_DIR, "execute_command.yaml")
 INVENTORY_FILE = os.path.join(ANSIBLE_DIR, "inventory.ini")
+
+class CommandPayload(BaseModel):
+    command: str
 
 @router.get("/router/{router_id}/structured-config")
 def get_structured_config(router_id: str, current_user=Depends(get_current_user)):
@@ -169,4 +175,52 @@ def apply_config(router_id: str, payload: dict, current_user=Depends(get_current
         "status": "success",
         "message": "Configuration applied successfully",
         "router_id": router_id
+    }
+    
+@router.post("/execute-command")
+def execute_command_on_all(payload: CommandPayload, current_user=Depends(get_current_user)):
+    
+    # Get all routers for this user
+    routers = list(routers_collection.find({
+        "user_id": current_user["id"]
+    }))
+
+    if not routers:
+        raise HTTPException(status_code=404, detail="No routers found")
+
+    results = []
+
+    for router_obj in routers:
+        router_name = router_obj["name"]
+
+        try:
+            subprocess.run(
+                [
+                    "ansible-playbook",
+                    EXECUTE_PLAYBOOK,
+                    "-i",
+                    INVENTORY_FILE,
+                    "--limit",
+                    router_name,
+                    "--extra-vars",
+                    f"command='{payload.command}'"
+                ],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            results.append({
+                "router": router_name,
+                "status": "success"
+            })
+
+        except subprocess.CalledProcessError:
+            results.append({
+                "router": router_name,
+                "status": "failed"
+            })
+
+    return {
+        "command": payload.command,
+        "results": results
     }
