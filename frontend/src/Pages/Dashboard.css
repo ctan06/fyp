@@ -3,8 +3,6 @@
   font-family: Arial, sans-serif;
 }
 
-/* Push Test */
-
 h1 {
   margin-bottom: 20px;
   color: #0f006d;
@@ -663,17 +661,25 @@ h1 {
     width: 100%;
   }
 
-  /* Delete / action buttons */
-  .router-buttons {
-    flex-direction: column;
-    gap: 8px;
-  }
-
   .delete-btn,
   .view-config-btn,
   .fetch-config-btn,
   .manage-config-btn,
-  .view-history-btn {
+  .view-history-btn,
+  .edit-btn {
     width: 100%;
+  }
+
+  .router-buttons {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .router-buttons button {
+    width: 100%;
+    padding: 7px;
+    font-size: 12px;
+    border-radius: 6px;
+    box-sizing: border-box;
   }
 }
