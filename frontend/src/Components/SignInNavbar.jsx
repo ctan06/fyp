@@ -6,7 +6,7 @@ import logo from '../assets/nav-logo.jpeg';
 
 const SignInNavbar = () => {
   return (
-    <nav className="container">
+    <nav>
         <img src={logo} alt="Logo" className='logo'/>
         <ul>
             <li>

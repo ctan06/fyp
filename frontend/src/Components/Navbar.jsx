@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 import './Navbar.css';
 import logo from '../assets/nav-logo.jpeg';
@@ -16,15 +16,31 @@ import logo from '../assets/nav-logo.jpeg';
 */
 
 const Navbar = ({ isAuthenticated, onLogout }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setMenuOpen(prev => !prev);
+  };
+
+  const closeMenu = () => {
+    setMenuOpen(false);
+  };
+
   return (
     <nav className='container'>
         <img src={logo} alt="Logo" className='logo'/>
 
-        <ul>
-            <li><a href="#home">Home</a></li>
-            <li><a href="#about">About Us</a></li>
-            <li><a href="#features">Features</a></li>
-            <li><a href="#how-it-works">How It Works</a></li>
+        <div className="hamburger" onClick={toggleMenu}>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+
+        <ul className={menuOpen ? "active" : ""}>
+            <li onClick={closeMenu}><a href="#home">Home</a></li>
+            <li onClick={closeMenu}><a href="#about">About Us</a></li>
+            <li onClick={closeMenu}><a href="#features">Features</a></li>
+            <li onClick={closeMenu}><a href="#how-it-works">How It Works</a></li>
             {/* 
             AUTHENTICATION-BASED RENDERING
 
@@ -34,7 +50,7 @@ const Navbar = ({ isAuthenticated, onLogout }) => {
 
             This is controlled by the `isAuthenticated` boolean.
             */}
-            <li>
+            <li onClick={closeMenu}>
               {!isAuthenticated ? (
               /*
                 Case 1: User is NOT authenticated

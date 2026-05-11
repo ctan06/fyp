@@ -536,3 +536,130 @@ h1 {
   color: #0f006d;
   margin-bottom: 15px;
 }
+
+/*Responsive Design*/
+@media (max-width: 768px) {
+
+  .dashboard-container {
+    padding: 20px 14px;
+  }
+
+  h1 {
+    font-size: 22px;
+    text-align: center;
+  }
+
+  /* Banner */
+  .auto-fetch-banner {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  /* Buttons */
+  .add-router-btn,
+  .fetchAll-config-btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+
+  /* Router cards */
+  .router-list {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .router-card {
+    min-width: 100%;
+    width: 100%;
+    min-height: auto;
+    padding: 20px;
+  }
+
+  /* Modal base */
+  .modal {
+    width: 95%;
+    padding: 20px;
+  }
+
+  .modal input {
+    font-size: 14px;
+  }
+
+  .modal-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .save-btn,
+  .add-cancel-btn {
+    width: 100%;
+  }
+
+  /* Fetch result */
+  .fetch-all-result {
+    font-size: 13px;
+    padding: 12px;
+  }
+
+  /* History modal */
+  .history-modal {
+    width: 95%;
+    padding: 20px;
+  }
+
+  .history-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  /* Compare section */
+  .compare-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .compare-inputs {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .compare-input {
+    width: 100%;
+  }
+
+  .compare-btn {
+    width: 100%;
+  }
+
+  .compare-modal {
+    width: 95%;
+  }
+
+  /* Manage modal */
+  .manage-save-btn,
+  .manage-close-button {
+    width: 100%;
+  }
+
+  .manage-hostname input {
+    width: 100%;
+  }
+
+  /* Delete / action buttons */
+  .router-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .delete-btn,
+  .view-config-btn,
+  .fetch-config-btn,
+  .manage-config-btn,
+  .view-history-btn {
+    width: 100%;
+  }
+}

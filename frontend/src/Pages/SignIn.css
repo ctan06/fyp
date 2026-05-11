@@ -142,7 +142,7 @@
   text-decoration: underline;
 }
 
-/* Responsive */
+/* Responsive Design*/
 @media (max-width: 480px) {
   .signin-card {
     padding: 40px 25px;

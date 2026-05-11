@@ -34,3 +34,33 @@ nav ul li{
   border: 0;
   outline: 0;
 }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    nav {
+        padding: 10px 0;
+        flex-wrap: wrap;
+    }
+
+    .logo {
+        width: 140px;
+    }
+
+    nav ul {
+        width: 100%;
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    nav ul li {
+        display: block;
+        margin: 12px 0;
+        font-size: 15px;
+    }
+
+    .btn {
+        padding: 10px 18px;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+}

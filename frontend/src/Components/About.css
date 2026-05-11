@@ -39,3 +39,45 @@
     margin-bottom: 15px;
     max-width: 700px;
 }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .about {
+        flex-direction: column;
+        width: 100%;
+        margin: 60px auto;
+        padding: 0 20px; /* Adds space from screen edges */
+        text-align: center;
+    }
+
+    .about-left,
+    .about-right {
+        flex-basis: 100%;
+        width: 100%;
+    }
+
+    .about-left {
+        margin-bottom: 30px;
+    }
+
+    .about-img {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .about h2 {
+        font-size: 28px;
+        max-width: 100%;
+    }
+
+    .about h3 {
+        font-size: 14px;
+    }
+
+    .about p {
+        max-width: 100%;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+}

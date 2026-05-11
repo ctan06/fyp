@@ -62,3 +62,41 @@
   font-size: 13px;
   color: #adb5bd;
 }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .footer {
+    padding: 60px 20px 25px;
+  }
+
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: 35px;
+  }
+
+  .footer-brand h3 {
+    font-size: 18px;
+  }
+
+  .footer-brand p {
+    font-size: 13px;
+    max-width: 100%;
+  }
+
+  .footer-links h4 {
+    font-size: 14px;
+  }
+
+  .footer-links a {
+    font-size: 13px;
+  }
+
+  .footer-bottom {
+    margin-top: 35px;
+    padding-top: 18px;
+  }
+
+  .footer-bottom p {
+    font-size: 12px;
+  }
+}
