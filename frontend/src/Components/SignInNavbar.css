@@ -1,8 +1,8 @@
-nav{
+nav {
     width: 100%;
     background: #0f006d;
     color: #fff;
-    padding: 4px 0;
+    padding: 8px 20px;
     position: fixed;
     top: 0;
     left: 0;
@@ -12,19 +12,20 @@ nav{
     z-index: 10;
 }
 
-nav ul li{
-    display: inline-block;
-    list-style: none;
-    margin: 5px 20px;
-    font-size: 16px;
-    cursor: pointer;
+/* Logo */
+.logo {
+    width: 180px;
 }
 
-.logo{
-    width: 200px;
+/* Right side container (for button or links) */
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-.btn{
+/* HOME button */
+.btn {
   background: #fff;
   color: #0f006d;
   padding: 14px 25px;
@@ -35,27 +36,31 @@ nav ul li{
   outline: 0;
 }
 
+nav ul {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+nav ul li {
+    list-style: none;
+    margin: 0;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
+
     nav {
-        padding: 10px 0;
-        flex-wrap: wrap;
+        padding: 10px 15px;
     }
 
     .logo {
-        width: 140px;
+        width: 130px;
     }
 
-    nav ul {
-        width: 100%;
-        text-align: center;
-        margin-top: 10px;
-    }
-
-    nav ul li {
-        display: block;
-        margin: 12px 0;
-        font-size: 15px;
+    .nav-right {
+        gap: 8px;
     }
 
     .btn {

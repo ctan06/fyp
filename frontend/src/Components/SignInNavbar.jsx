@@ -7,12 +7,11 @@ import logo from '../assets/nav-logo.jpeg';
 const SignInNavbar = () => {
   return (
     <nav>
-        <img src={logo} alt="Logo" className='logo'/>
-        <ul>
-            <li>
-                <Link to="/" className="btn">Home</Link>
-            </li>
-        </ul>
+      <img src={logo} alt="Logo" className="logo" />
+
+      <div className="nav-right">
+        <Link to="/" className="btn">Home</Link>
+      </div>
     </nav>
   );
 };
