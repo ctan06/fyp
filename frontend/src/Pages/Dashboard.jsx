@@ -39,6 +39,15 @@ const Dashboard = () => {
   const [loadingManage, setLoadingManage] = useState(false); // stores the loading state for the manage config operation
   const [managingRouterId, setManagingRouterId] = useState(null); // stores the ID of the router being managed
   const [savingConfig, setSavingConfig] = useState(false); // stores the loading state for saving the managed configuration
+  // Execute command on all routers states
+  const [showExecuteModal, setShowExecuteModal] = useState(false); // controls execute command modal visibility
+  const [selectedCommand, setSelectedCommand] = useState(""); // stores the command entered by the user to execute on all routers
+  const [executeLoading, setExecuteLoading] = useState(false); // stores the loading state for the execute command operation
+  const [executeResults, setExecuteResults] = useState(null); // stores the results returned from the backend after executing the command on all routers
+  const predefinedCommands = [
+    "ip access-list extended BLOCK_HTTP"
+  ];
+
   // Fetch routers from backend when Dashboard mounts
   useEffect(() => {
     const fetchRouters = async () => {
@@ -612,6 +621,70 @@ const Dashboard = () => {
     }
   };
 
+  // This function handles the execution of a predefined command on all routers.
+  const handleExecuteCommand = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      if (!selectedCommand) {
+        setError("Please select a command.");
+        return;
+      }
+
+      setExecuteLoading(true);
+      setExecuteResults(null);
+      setError("");
+
+      const response = await fetch(
+        `http://localhost:8000/router-configs/execute-command`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            command: selectedCommand,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+
+        let errorMessage = "Failed to execute command";
+
+        try {
+          const errData = JSON.parse(errorText);
+          errorMessage = errData.detail || errorMessage;
+        } catch {
+          if (errorText) {
+            errorMessage = errorText;
+          }
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      const responseText = await response.text();
+
+      if (!responseText) {
+        throw new Error("Backend returned an empty response.");
+      }
+
+      const result = JSON.parse(responseText);
+
+      setExecuteResults(result);
+
+    } catch (err) {
+      console.error("Execute command error:", err);
+      setError(err.message);
+    } finally {
+      setExecuteLoading(false);
+    }
+  };
+
   return (
     <div className="dashboard-container">
       <h1>Network Dashboard</h1>
@@ -636,7 +709,20 @@ const Dashboard = () => {
         >
           {fetchAllLoading ? "Fetching All..." : "Fetch All Configurations"}
         </button>
+
+        <button
+          className="execute-command-btn"
+          onClick={() => {
+            setShowExecuteModal(true);
+            setSelectedCommand("");
+            setExecuteResults(null);
+            setError("");
+          }}
+        >
+          Execute Command on All Routers
+        </button>
       </div>
+
         {fetchAllResult && (
           <div className="fetch-all-result">
             <h3>Fetch All Results</h3>
@@ -1102,6 +1188,78 @@ const Dashboard = () => {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {showExecuteModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>Execute Command on All Routers</h2>
+
+            {/* Dropdown */}
+            <select
+              value={selectedCommand}
+              onChange={(e) => setSelectedCommand(e.target.value)}
+              style={{ width: "100%", marginBottom: "15px", padding: "10px" }}
+            >
+              <option value="">Select a command</option>
+              {predefinedCommands.map((command, index) => (
+                <option key={index} value={command}>
+                  {command}
+                </option>
+              ))}
+            </select>
+
+            {/* Error message */}
+            {error && <p className="error">{error}</p>}
+
+            {/* Execute results */}
+            {executeResults && (
+              <div style={{ marginTop: "20px" }}>
+                <h3>Execution Results</h3>
+
+                {executeResults.results.map((result, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      padding: "10px",
+                      marginBottom: "8px",
+                      borderRadius: "6px",
+                      backgroundColor:
+                        result.status === "success" ? "#d1fae5" : "#fee2e2",
+                      color:
+                        result.status === "success" ? "#065f46" : "#991b1b",
+                      fontWeight: "500",
+                    }}
+                  >
+                    {result.router}: {result.status}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Buttons */}
+            <div className="modal-buttons">
+              <button
+                className="manage-save-btn"
+                onClick={handleExecuteCommand}
+                disabled={executeLoading}
+              >
+                {executeLoading ? "Executing..." : "Execute on All Routers"}
+              </button>
+
+              <button
+                className="manage-close-button"
+                onClick={() => {
+                  setShowExecuteModal(false);
+                  setSelectedCommand("");
+                  setExecuteResults(null);
+                }}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
